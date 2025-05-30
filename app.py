@@ -492,6 +492,232 @@ async def get_feature_map_hires(model_key: str, weight_id: int, img_size: int = 
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+@app.get("/api/topology/{model_key}")
+async def get_network_topology(model_key: str):
+    """Get network topology data for visualization"""
+    try:
+        if model_key not in cppn_manager.models:
+            raise HTTPException(status_code=404, detail=f"Model {model_key} not found")
+        
+        # Extract the source type and genome from model_key
+        source, genome = model_key.split("_", 1)
+        save_dir = f"data/{source}_{genome}"
+        
+        # Load the original NEAT structure if it exists (for Picbreeder)
+        pbcppn_data = None
+        if source == "picbreeder":
+            try:
+                pbcppn_data = util.load_pkl(save_dir, "pbcppn")
+            except:
+                pass
+        
+        # Get architecture and parameters
+        model = cppn_manager.models[model_key]
+        arch_str = model["arch"]
+        
+        # Parse architecture
+        n_layers_str, activation_neurons_str = arch_str.split(";")
+        n_layers = int(n_layers_str)
+        
+        activations = []
+        d_hidden = []
+        for layer_spec in activation_neurons_str.split(","):
+            activation, count = layer_spec.split(":")
+            activations.append(activation.strip())
+            d_hidden.append(int(count))
+        
+        layer_size = sum(d_hidden)
+        input_size = 4  # x, y, d, bias
+        output_size = 3  # h, s, v
+        
+        # Build topology data
+        topology = {
+            "model_key": model_key,
+            "source": source,
+            "genome": genome,
+            "n_layers": n_layers,
+            "layer_size": layer_size,
+            "activations": activations,
+            "d_hidden": d_hidden,
+            "nodes": [],
+            "links": [],
+            "original_neat": None
+        }
+        
+        # Add input nodes
+        input_names = ["x", "y", "d", "bias"]
+        for i, name in enumerate(input_names):
+            topology["nodes"].append({
+                "id": f"input_{i}",
+                "label": name,
+                "type": "input",
+                "activation": "identity",
+                "layer": -1,
+                "x": 0,
+                "y": i * 50
+            })
+        
+        # Add hidden layer nodes (sample only to avoid performance issues)
+        max_layers_to_show = min(5, n_layers)  # Limit to first 5 layers
+        for layer_idx in range(max_layers_to_show):
+            y_offset = 0
+            neuron_idx_in_layer = 0
+            for act_idx, (activation, count) in enumerate(zip(activations, d_hidden)):
+                # Only show first few neurons of each activation type
+                max_neurons_per_type = min(5, count)
+                for neuron_in_group in range(max_neurons_per_type):
+                    topology["nodes"].append({
+                        "id": f"hidden_{layer_idx}_{neuron_idx_in_layer}",
+                        "label": f"L{layer_idx}N{neuron_idx_in_layer}" if count <= 5 else f"L{layer_idx}{activation[:3]}",
+                        "type": "hidden",
+                        "activation": activation,
+                        "layer": layer_idx,
+                        "x": (layer_idx + 1) * 200,
+                        "y": y_offset + neuron_in_group * 30
+                    })
+                    neuron_idx_in_layer += 1
+                # Add ellipsis node if there are more neurons
+                if count > max_neurons_per_type:
+                    topology["nodes"].append({
+                        "id": f"hidden_{layer_idx}_{neuron_idx_in_layer}_more",
+                        "label": f"...+{count - max_neurons_per_type}",
+                        "type": "hidden",
+                        "activation": "ellipsis",
+                        "layer": layer_idx,
+                        "x": (layer_idx + 1) * 200,
+                        "y": y_offset + max_neurons_per_type * 30
+                    })
+                    neuron_idx_in_layer += 1
+                y_offset += (max_neurons_per_type + (1 if count > max_neurons_per_type else 0)) * 30 + 20
+        
+        # Add ellipsis for remaining layers if there are more
+        if n_layers > max_layers_to_show:
+            topology["nodes"].append({
+                "id": f"layers_more",
+                "label": f"...+{n_layers - max_layers_to_show} layers",
+                "type": "hidden",
+                "activation": "ellipsis",
+                "layer": max_layers_to_show,
+                "x": (max_layers_to_show + 1) * 200,
+                "y": 100
+            })
+        
+        # Add output nodes
+        output_names = ["h", "s", "v"]
+        for i, name in enumerate(output_names):
+            topology["nodes"].append({
+                "id": f"output_{i}",
+                "label": name,
+                "type": "output",
+                "activation": "identity",
+                "layer": n_layers,
+                "x": (n_layers + 1) * 200,
+                "y": i * 50
+            })
+        
+        # Create a list of actual node IDs for reference
+        existing_node_ids = set(node["id"] for node in topology["nodes"])
+        
+        # Add connections (only between existing nodes)
+        # Input to first hidden layer (sample subset)
+        for input_idx in range(input_size):
+            # Connect to first few actual neurons in layer 0
+            layer_0_nodes = [node["id"] for node in topology["nodes"] 
+                           if node["type"] == "hidden" and node["layer"] == 0 and "more" not in node["id"]]
+            for target_id in layer_0_nodes[:6]:  # Connect to first 6 actual nodes
+                topology["links"].append({
+                    "id": f"link_input_{input_idx}_to_{target_id}",
+                    "source": f"input_{input_idx}",
+                    "target": target_id,
+                    "weight": 1.0,
+                    "type": "input_to_hidden"
+                })
+        
+        # Hidden to hidden layers (simplified - only show some connections between adjacent layers)
+        if max_layers_to_show > 1:
+            for layer_idx in range(min(2, max_layers_to_show - 1)):  # Only first 2 layer transitions
+                source_nodes = [node["id"] for node in topology["nodes"] 
+                              if node["type"] == "hidden" and node["layer"] == layer_idx and "more" not in node["id"]]
+                target_nodes = [node["id"] for node in topology["nodes"] 
+                              if node["type"] == "hidden" and node["layer"] == layer_idx + 1 and "more" not in node["id"]]
+                
+                # Connect first few nodes from each layer
+                for i, source_id in enumerate(source_nodes[:4]):
+                    for j, target_id in enumerate(target_nodes[:4]):
+                        if i % 2 == 0 and j % 2 == 0:  # Sparse sampling
+                            topology["links"].append({
+                                "id": f"link_{source_id}_to_{target_id}",
+                                "source": source_id,
+                                "target": target_id,
+                                "weight": 1.0,
+                                "type": "hidden_to_hidden"
+                            })
+        
+        # Last shown hidden layer to output (sample connections)
+        last_layer_idx = max_layers_to_show - 1
+        last_layer_nodes = [node["id"] for node in topology["nodes"] 
+                           if node["type"] == "hidden" and node["layer"] == last_layer_idx and "more" not in node["id"]]
+        
+        for output_idx in range(output_size):
+            # Connect to first few neurons from last layer
+            for source_id in last_layer_nodes[:4]:
+                topology["links"].append({
+                    "id": f"link_{source_id}_to_output_{output_idx}",
+                    "source": source_id,
+                    "target": f"output_{output_idx}",
+                    "weight": 1.0,
+                    "type": "hidden_to_output"
+                })
+        
+        # If we have original NEAT data (Picbreeder), include it
+        if pbcppn_data:
+            neat_topology = {
+                "nodes": [],
+                "links": []
+            }
+            
+            # Get special nodes mapping for proper input/output identification
+            special_nodes = pbcppn_data.get('special_nodes', {})
+            input_node_ids = {str(special_nodes.get(name)) for name in ['x', 'y', 'd', 'bias'] if special_nodes.get(name) is not None}
+            output_node_ids = {str(special_nodes.get(name)) for name in ['h', 's', 'v'] if special_nodes.get(name) is not None}
+            
+            # Process NEAT nodes
+            if 'nodes' in pbcppn_data:
+                for node in pbcppn_data['nodes']:
+                    node_id = str(node.get('id', ''))
+                    
+                    # Determine node type based on special_nodes mapping
+                    if node_id in input_node_ids:
+                        node_type = "input"
+                    elif node_id in output_node_ids:
+                        node_type = "output"
+                    else:
+                        node_type = "hidden"
+                    
+                    neat_topology["nodes"].append({
+                        "id": node_id,
+                        "label": node.get('label', ''),
+                        "activation": node.get('activation', 'identity'),
+                        "type": node_type
+                    })
+            
+            # Process NEAT connections
+            if 'links' in pbcppn_data:
+                for link in pbcppn_data['links']:
+                    neat_topology["links"].append({
+                        "id": str(link.get('id', '')),
+                        "source": str(link.get('source', '')),
+                        "target": str(link.get('target', '')),
+                        "weight": float(link.get('weight', 0.0))
+                    })
+            
+            topology["original_neat"] = neat_topology
+        
+        return topology
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 

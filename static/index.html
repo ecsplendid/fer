@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FER CPPN Explorer - Interactive Weight Selection</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -684,6 +685,140 @@
             image-rendering: pixelated;
         }
 
+        /* Network topology visualization styles */
+        .topology-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+        }
+
+        .topology-header {
+            background: rgba(30, 30, 30, 0.9);
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .topology-title {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .topology-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .topology-btn {
+            background: linear-gradient(45deg, #6366f1, #8b5cf6);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .topology-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+        }
+
+        .topology-btn.active {
+            background: linear-gradient(45deg, #10b981, #3b82f6);
+        }
+
+        .topology-content {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .topology-svg {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%);
+        }
+
+        .topology-node {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .topology-node:hover {
+            stroke-width: 3px;
+        }
+
+        .topology-link {
+            stroke-opacity: 0.6;
+            transition: all 0.3s ease;
+        }
+
+        .topology-link:hover {
+            stroke-opacity: 1;
+            stroke-width: 3px;
+        }
+
+        .topology-node-label {
+            fill: white;
+            font-size: 10px;
+            font-weight: 600;
+            text-anchor: middle;
+            pointer-events: none;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+        }
+
+        .topology-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .topology-legend {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
         .animation-controls {
             background: rgba(30, 30, 30, 0.8);
             border-radius: 15px;
@@ -915,6 +1050,7 @@
                         <div class="progress-text" id="picbreeder-progress-text">Generating frames...</div>
                     </div>
                     <div class="fullscreen-controls">
+                        <button class="fullscreen-btn" onclick="showTopology('picbreeder')" title="Network Topology">🕸️</button>
                         <button class="fullscreen-btn" onclick="enterFullscreen('picbreeder')" title="Fullscreen">⛶</button>
                     </div>
                 </div>
@@ -950,6 +1086,7 @@
                         <div class="progress-text" id="sgd-progress-text">Generating frames...</div>
                     </div>
                     <div class="fullscreen-controls">
+                        <button class="fullscreen-btn" onclick="showTopology('sgd')" title="Network Topology">🕸️</button>
                         <button class="fullscreen-btn" onclick="enterFullscreen('sgd')" title="Fullscreen">⛶</button>
                     </div>
                 </div>
@@ -1043,8 +1180,9 @@
             <p><strong>4. Select Weight:</strong> Click on a weight slider box to select it (green border indicates selection)</p>
             <p><strong>5. Set Keyframes:</strong> With weight selected, press <span class="key">I</span> for IN point, <span class="key">O</span> for OUT point</p>
             <p><strong>6. Animate:</strong> Press <span class="key">Space</span> to start/restart animation or <span class="key">R</span> for bounce loop mode</p>
-            <p><strong>7. Fullscreen:</strong> Click <span class="key">⛶</span> on images for fullscreen, or <span class="key">🔲 Split View</span> for side-by-side comparison</p>
-            <p><strong>8. Visual Indicators:</strong> Blue left border = some keyframes, Green left border = both keyframes set</p>
+            <p><strong>7. Network Topology:</strong> Click <span class="key">🕸️</span> to view network structure with force-directed graph visualization</p>
+            <p><strong>8. Fullscreen:</strong> Click <span class="key">⛶</span> on images for fullscreen, or <span class="key">🔲 Split View</span> for side-by-side comparison</p>
+            <p><strong>9. Visual Indicators:</strong> Blue left border = some keyframes, Green left border = both keyframes set</p>
             <p><strong>Note:</strong> Animations work in fullscreen mode too! Bounce mode loops forward and backward continuously. Press <span class="key">Esc</span> to exit fullscreen.</p>
         </div>
     </div>
@@ -2384,6 +2522,381 @@
                 featureFullscreenContainer.remove();
                 document.removeEventListener('keydown', onFullscreenKeydown);
                 console.log('Exited feature fullscreen mode');
+            }
+        }
+
+        // Network topology visualization functions
+        let currentTopologyData = null;
+        let topologySimulation = null;
+        let currentTopologyView = 'layered'; // 'layered' or 'neat'
+        let topologyZoom = null;
+        let topologySvg = null;
+
+        async function showTopology(modelType) {
+            try {
+                const modelKey = `${modelType}_${currentModel}`;
+                
+                // Fetch topology data
+                const response = await fetch(`/api/topology/${modelKey}`);
+                if (!response.ok) {
+                    throw new Error('Failed to load topology data');
+                }
+                
+                currentTopologyData = await response.json();
+                
+                // Create topology container
+                const topologyDiv = document.createElement('div');
+                topologyDiv.className = 'topology-container';
+                topologyDiv.id = 'topology-container';
+                
+                // Create header
+                const header = document.createElement('div');
+                header.className = 'topology-header';
+                
+                const title = document.createElement('div');
+                title.className = 'topology-title';
+                title.textContent = `${modelType === 'picbreeder' ? 'Picbreeder (UFR)' : 'SGD (FER)'} - ${currentModel.toUpperCase()} Network Topology`;
+                
+                const controls = document.createElement('div');
+                controls.className = 'topology-controls';
+                
+                // View toggle buttons
+                const layeredBtn = document.createElement('button');
+                layeredBtn.className = 'topology-btn active';
+                layeredBtn.textContent = 'Layered View';
+                layeredBtn.onclick = () => switchTopologyView('layered');
+                
+                const neatBtn = document.createElement('button');
+                neatBtn.className = 'topology-btn';
+                neatBtn.textContent = 'NEAT View';
+                neatBtn.onclick = () => switchTopologyView('neat');
+                neatBtn.disabled = !currentTopologyData.original_neat;
+                
+                // Zoom controls
+                const zoomInBtn = document.createElement('button');
+                zoomInBtn.className = 'topology-btn';
+                zoomInBtn.innerHTML = '🔍+';
+                zoomInBtn.onclick = () => zoomTopology(1.5);
+                
+                const zoomOutBtn = document.createElement('button');
+                zoomOutBtn.className = 'topology-btn';
+                zoomOutBtn.innerHTML = '🔍-';
+                zoomOutBtn.onclick = () => zoomTopology(0.75);
+                
+                const resetBtn = document.createElement('button');
+                resetBtn.className = 'topology-btn';
+                resetBtn.innerHTML = '↻';
+                resetBtn.onclick = () => resetTopologyView();
+                
+                const closeBtn = document.createElement('button');
+                closeBtn.className = 'fullscreen-close';
+                closeBtn.innerHTML = '×';
+                closeBtn.onclick = exitTopology;
+                
+                controls.appendChild(layeredBtn);
+                controls.appendChild(neatBtn);
+                controls.appendChild(zoomInBtn);
+                controls.appendChild(zoomOutBtn);
+                controls.appendChild(resetBtn);
+                controls.appendChild(closeBtn);
+                
+                header.appendChild(title);
+                header.appendChild(controls);
+                
+                // Create content area
+                const content = document.createElement('div');
+                content.className = 'topology-content';
+                content.id = 'topology-content';
+                
+                topologyDiv.appendChild(header);
+                topologyDiv.appendChild(content);
+                document.body.appendChild(topologyDiv);
+                
+                // Render the topology
+                renderTopology('layered');
+                
+                // Add escape key listener
+                document.addEventListener('keydown', onTopologyKeydown);
+                
+            } catch (error) {
+                console.error('Error showing topology:', error);
+                alert('Failed to load network topology');
+            }
+        }
+
+        function switchTopologyView(view) {
+            currentTopologyView = view;
+            
+            // Update button states
+            const buttons = document.querySelectorAll('.topology-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            if (view === 'layered') {
+                buttons[0].classList.add('active');
+            } else {
+                buttons[1].classList.add('active');
+            }
+            
+            renderTopology(view);
+        }
+
+        function renderTopology(view) {
+            const content = document.getElementById('topology-content');
+            content.innerHTML = '';
+            
+            // Create SVG with zoom functionality
+            const svg = d3.select(content)
+                .append('svg')
+                .attr('class', 'topology-svg')
+                .attr('width', '100%')
+                .attr('height', '100%');
+            
+            const width = content.clientWidth;
+            const height = content.clientHeight;
+            
+            // Add zoom behavior
+            const zoom = d3.zoom()
+                .scaleExtent([0.1, 10])
+                .on('zoom', (event) => {
+                    container.attr('transform', event.transform);
+                });
+            
+            svg.call(zoom);
+            
+            // Store references for zoom controls
+            topologyZoom = zoom;
+            topologySvg = svg;
+            
+            // Create container for zoomable content
+            const container = svg.append('g');
+            
+            // Get the appropriate data
+            let nodes, links;
+            if (view === 'neat' && currentTopologyData.original_neat) {
+                nodes = currentTopologyData.original_neat.nodes.map(d => ({...d}));
+                links = currentTopologyData.original_neat.links.map(d => ({...d}));
+            } else {
+                nodes = currentTopologyData.nodes.map(d => ({...d}));
+                links = currentTopologyData.links.map(d => ({...d}));
+            }
+            
+            // Set up different simulation parameters based on view
+            let simulation;
+            if (view === 'neat' && currentTopologyData.original_neat) {
+                // NEAT view - pin inputs left and outputs right
+                let inputCount = 0;
+                let outputCount = 0;
+                
+                // Fix input and output positions
+                nodes.forEach(node => {
+                    if (node.type === 'input') {
+                        node.fx = 100; // Fixed X position on left
+                        node.fy = 100 + inputCount * 80; // Spaced vertically
+                        inputCount++;
+                    } else if (node.type === 'output') {
+                        node.fx = width - 100; // Fixed X position on right
+                        node.fy = 100 + outputCount * 80; // Spaced vertically
+                        outputCount++;
+                    }
+                });
+                
+                simulation = d3.forceSimulation(nodes)
+                    .force('link', d3.forceLink(links).id(d => d.id).distance(150))
+                    .force('charge', d3.forceManyBody().strength(-500))
+                    .force('center', d3.forceCenter(width / 2, height / 2))
+                    .force('collision', d3.forceCollide().radius(25));
+            } else {
+                // Layered view - use hierarchical layout with zoom out to fit
+                const initialScale = Math.min(width / (currentTopologyData.n_layers * 300), height / (currentTopologyData.layer_size * 40), 1);
+                
+                // Set initial zoom to fit content
+                svg.call(zoom.transform, d3.zoomIdentity.scale(initialScale).translate(
+                    (width - currentTopologyData.n_layers * 300 * initialScale) / 2 / initialScale,
+                    (height - currentTopologyData.layer_size * 40 * initialScale) / 2 / initialScale
+                ));
+                
+                simulation = d3.forceSimulation(nodes)
+                    .force('link', d3.forceLink(links).id(d => d.id).distance(200))
+                    .force('charge', d3.forceManyBody().strength(-100))
+                    .force('x', d3.forceX(d => d.x || width / 2).strength(0.8))
+                    .force('y', d3.forceY(d => d.y || height / 2).strength(0.3))
+                    .force('collision', d3.forceCollide().radius(15));
+            }
+            
+            topologySimulation = simulation;
+            
+            // Color scale for node types
+            const nodeColors = {
+                'input': '#10b981',
+                'output': '#ef4444',
+                'hidden': '#6366f1'
+            };
+            
+            // Activation function colors
+            const activationColors = {
+                'identity': '#64748b',
+                'cache': '#64748b',
+                'sin': '#f59e0b',
+                'cos': '#f97316',
+                'tanh': '#8b5cf6',
+                'sigmoid': '#ec4899',
+                'gaussian': '#06b6d4',
+                'relu': '#84cc16',
+                'ellipsis': '#9ca3af'
+            };
+            
+            // Create links
+            const link = container.append('g')
+                .selectAll('line')
+                .data(links)
+                .enter().append('line')
+                .attr('class', 'topology-link')
+                .attr('stroke', '#999')
+                .attr('stroke-width', d => Math.abs(d.weight) * 2 + 0.5);
+            
+            // Create nodes
+            const node = container.append('g')
+                .selectAll('g')
+                .data(nodes)
+                .enter().append('g')
+                .attr('class', 'topology-node')
+                .call(d3.drag()
+                    .on('start', dragstarted)
+                    .on('drag', dragged)
+                    .on('end', dragended));
+            
+            // Add circles for nodes
+            node.append('circle')
+                .attr('r', d => d.type === 'hidden' ? 8 : 12)
+                .attr('fill', d => d.type === 'hidden' ? activationColors[d.activation] || '#6366f1' : nodeColors[d.type])
+                .attr('stroke', '#fff')
+                .attr('stroke-width', 2);
+            
+            // Add labels
+            node.append('text')
+                .attr('class', 'topology-node-label')
+                .attr('dy', 4)
+                .text(d => d.label || d.id);
+            
+            // Add info panel
+            const info = d3.select(content)
+                .append('div')
+                .attr('class', 'topology-info')
+                .html(`
+                    <div><strong>Nodes:</strong> ${nodes.length}</div>
+                    <div><strong>Connections:</strong> ${links.length}</div>
+                    <div><strong>Layers:</strong> ${currentTopologyData.n_layers}</div>
+                    <div><strong>View:</strong> ${view === 'neat' ? 'Original NEAT' : 'Layered MLP'}</div>
+                `);
+            
+            // Add legend
+            const legend = d3.select(content)
+                .append('div')
+                .attr('class', 'topology-legend');
+            
+            legend.append('div').text('Node Types:');
+            Object.entries(nodeColors).forEach(([type, color]) => {
+                const item = legend.append('div').attr('class', 'legend-item');
+                item.append('div').attr('class', 'legend-color').style('background-color', color);
+                item.append('span').text(type.charAt(0).toUpperCase() + type.slice(1));
+            });
+            
+            legend.append('div').style('margin-top', '10px').text('Activations:');
+            Object.entries(activationColors).forEach(([activation, color]) => {
+                const item = legend.append('div').attr('class', 'legend-item');
+                item.append('div').attr('class', 'legend-color').style('background-color', color);
+                item.append('span').text(activation);
+            });
+            
+            // Update positions on simulation tick
+            topologySimulation.on('tick', () => {
+                link
+                    .attr('x1', d => d.source.x)
+                    .attr('y1', d => d.source.y)
+                    .attr('x2', d => d.target.x)
+                    .attr('y2', d => d.target.y);
+                
+                node.attr('transform', d => `translate(${d.x},${d.y})`);
+            });
+            
+            // Drag functions
+            function dragstarted(event, d) {
+                if (!event.active) topologySimulation.alphaTarget(0.3).restart();
+                d.fx = d.x;
+                d.fy = d.y;
+            }
+            
+            function dragged(event, d) {
+                d.fx = event.x;
+                d.fy = event.y;
+            }
+            
+            function dragended(event, d) {
+                if (!event.active) topologySimulation.alphaTarget(0);
+                d.fx = null;
+                d.fy = null;
+            }
+        }
+
+        function exitTopology() {
+            const topologyContainer = document.getElementById('topology-container');
+            if (topologyContainer) {
+                topologyContainer.remove();
+            }
+            
+            if (topologySimulation) {
+                topologySimulation.stop();
+                topologySimulation = null;
+            }
+            
+            currentTopologyData = null;
+            document.removeEventListener('keydown', onTopologyKeydown);
+            console.log('Exited topology view');
+        }
+
+        function onTopologyKeydown(e) {
+            if (e.code === 'Escape') {
+                e.preventDefault();
+                exitTopology();
+            }
+        }
+
+        function zoomTopology(scaleFactor) {
+            if (topologySvg && topologyZoom) {
+                topologySvg.transition().duration(300).call(
+                    topologyZoom.scaleBy, scaleFactor
+                );
+            }
+        }
+
+        function resetTopologyView() {
+            if (topologySvg && topologyZoom) {
+                const content = document.getElementById('topology-content');
+                const width = content.clientWidth;
+                const height = content.clientHeight;
+                
+                if (currentTopologyView === 'layered') {
+                    // Reset to fit layered view
+                    const initialScale = Math.min(
+                        width / (currentTopologyData.n_layers * 300), 
+                        height / (currentTopologyData.layer_size * 40), 
+                        1
+                    );
+                    
+                    topologySvg.transition().duration(500).call(
+                        topologyZoom.transform,
+                        d3.zoomIdentity.scale(initialScale).translate(
+                            (width - currentTopologyData.n_layers * 300 * initialScale) / 2 / initialScale,
+                            (height - currentTopologyData.layer_size * 40 * initialScale) / 2 / initialScale
+                        )
+                    );
+                } else {
+                    // Reset to center view
+                    topologySvg.transition().duration(500).call(
+                        topologyZoom.transform,
+                        d3.zoomIdentity.translate(width / 2, height / 2).scale(1)
+                    );
+                }
             }
         }
 
