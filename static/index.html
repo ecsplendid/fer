@@ -1,0 +1,2248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FER CPPN Explorer - Interactive Weight Selection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d30 50%, #1a1a1a 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, #6366f1, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            color: #94a3b8;
+        }
+
+        .controls-panel {
+            background: rgba(30, 30, 30, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .model-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .model-btn {
+            background: linear-gradient(45deg, #374151, #4b5563);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 1rem;
+            border: 2px solid transparent;
+        }
+
+        .model-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+        }
+
+        .model-btn.active {
+            background: linear-gradient(45deg, #6366f1, #8b5cf6);
+            border-color: #ec4899;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .model-section {
+            background: rgba(20, 20, 20, 0.9);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .picbreeder-title {
+            background: linear-gradient(45deg, #10b981, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .sgd-title {
+            background: linear-gradient(45deg, #ef4444, #f59e0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .image-container {
+            width: 100%;
+            height: 400px;
+            background: rgba(10, 10, 10, 0.8);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .image-container img, .image-container canvas {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .loading {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(99, 102, 241, 0.3);
+            border-top: 3px solid #6366f1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .progress-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 0 0 15px 15px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .progress-text {
+            color: #ffffff;
+            font-size: 0.8rem;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .fullscreen-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .fullscreen-btn {
+            background: rgba(0, 0, 0, 0.7);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .fullscreen-btn:hover {
+            background: rgba(99, 102, 241, 0.8);
+            transform: scale(1.05);
+        }
+
+        .split-fullscreen {
+            background: linear-gradient(45deg, #10b981, #3b82f6);
+        }
+
+        .split-fullscreen:hover {
+            background: linear-gradient(45deg, #059669, #2563eb);
+        }
+
+        /* Fullscreen styles */
+        .fullscreen-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .fullscreen-content {
+            max-width: 90vw;
+            max-height: 90vh;
+            position: relative;
+        }
+
+        .fullscreen-content canvas {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .fullscreen-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(239, 68, 68, 0.8);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .fullscreen-close:hover {
+            background: rgba(239, 68, 68, 1);
+            transform: scale(1.1);
+        }
+
+        .split-fullscreen-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .split-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .split-panel h3 {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .split-panel canvas {
+            max-width: 100%;
+            max-height: calc(100vh - 100px);
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .sliders-container {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding-right: 10px;
+        }
+
+        .slider-group {
+            background: rgba(40, 40, 40, 0.6);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .slider-group:hover {
+            background: rgba(50, 50, 50, 0.8);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .slider-group.selected {
+            border: 3px solid #10b981;
+            background: rgba(16, 185, 129, 0.1);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .slider-group.has-keyframes {
+            border-left: 4px solid #6366f1;
+        }
+
+        .slider-group.has-keyframes.has-both-keyframes {
+            border-left: 4px solid #10b981;
+        }
+
+        .keyframe-indicators-slider {
+            display: none;
+            margin-top: 8px;
+            padding: 8px;
+            background: rgba(20, 20, 20, 0.8);
+            border-radius: 5px;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .keyframe-indicators-slider.visible {
+            display: block;
+        }
+
+        .keyframe-value-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 3px 0;
+            font-size: 0.8rem;
+        }
+
+        .keyframe-label {
+            color: #94a3b8;
+            font-weight: 600;
+            min-width: 30px;
+        }
+
+        .keyframe-value {
+            color: #6366f1;
+            font-weight: 600;
+            background: rgba(99, 102, 241, 0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .slider-label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #e2e8f0;
+        }
+
+        .remove-slider-btn {
+            background: rgba(239, 68, 68, 0.8);
+            border: none;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .remove-slider-btn:hover {
+            background: rgba(239, 68, 68, 1);
+            transform: scale(1.1);
+        }
+
+        .weight-info {
+            color: #64748b;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: linear-gradient(90deg, #374151, #4b5563);
+            outline: none;
+            -webkit-appearance: none;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .slider-track-container {
+            position: relative;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        .keyframe-bar {
+            position: absolute;
+            top: -2px;
+            width: 2px;
+            height: 10px;
+            border-radius: 1px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .keyframe-bar.in-bar {
+            background: linear-gradient(180deg, #10b981, #059669);
+            box-shadow: 0 0 4px rgba(16, 185, 129, 0.6);
+        }
+
+        .keyframe-bar.out-bar {
+            background: linear-gradient(180deg, #3b82f6, #2563eb);
+            box-shadow: 0 0 4px rgba(59, 130, 246, 0.6);
+        }
+
+        .keyframe-bar.visible {
+            opacity: 1;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #6366f1, #8b5cf6);
+            cursor: pointer;
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.6);
+            transition: all 0.3s ease;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.8);
+        }
+
+        .slider-value {
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #6366f1;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 5px;
+            padding: 3px 8px;
+        }
+
+        .feature-maps-container {
+            margin-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 20px;
+        }
+
+        .feature-maps-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .feature-maps-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .load-features-btn {
+            background: linear-gradient(45deg, #6366f1, #8b5cf6);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .load-features-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+        }
+
+        .load-features-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .feature-maps-grid {
+            display: none;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            background: rgba(10, 10, 10, 0.5);
+        }
+
+        .feature-maps-grid.visible {
+            display: block;
+        }
+
+        .layer-section {
+            margin-bottom: 20px;
+        }
+
+        .layer-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #94a3b8;
+            margin-bottom: 10px;
+            padding: 5px 10px;
+            background: rgba(30, 30, 30, 0.8);
+            border-radius: 5px;
+        }
+
+        .layer-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 8px;
+        }
+
+        .feature-map {
+            width: 60px;
+            height: 60px;
+            border-radius: 5px;
+            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-map:hover {
+            border-color: rgba(99, 102, 241, 0.6);
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .feature-map.selected {
+            border-color: #10b981;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+        }
+
+        .feature-map img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .feature-tooltip {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 100;
+        }
+
+        .feature-map:hover .feature-tooltip {
+            opacity: 1;
+        }
+
+        .animation-controls {
+            background: rgba(30, 30, 30, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .animation-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+            background: linear-gradient(45deg, #10b981, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .animation-settings {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .setting-group {
+            background: rgba(40, 40, 40, 0.6);
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .setting-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #e2e8f0;
+            font-size: 0.9rem;
+        }
+
+        .setting-slider {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+
+        .setting-value {
+            text-align: center;
+            color: #6366f1;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .animation-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .anim-btn {
+            background: linear-gradient(45deg, #8b5cf6, #6366f1);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .anim-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+            border-color: #ec4899;
+        }
+
+        .anim-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .anim-btn.generating {
+            background: linear-gradient(45deg, #f59e0b, #d97706);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+        }
+
+        .keyframe-indicators {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .keyframe-status {
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        .keyframe-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid #4b5563;
+            transition: all 0.3s ease;
+        }
+
+        .keyframe-dot.set {
+            background: linear-gradient(45deg, #10b981, #3b82f6);
+            border-color: #10b981;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+
+        .instructions {
+            background: rgba(40, 40, 40, 0.6);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            border-left: 4px solid #6366f1;
+        }
+
+        .instructions h4 {
+            color: #6366f1;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .instructions p {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .key {
+            background: rgba(99, 102, 241, 0.2);
+            color: #6366f1;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        /* Scrollbar styling */
+        .sliders-container::-webkit-scrollbar,
+        .feature-maps-grid::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sliders-container::-webkit-scrollbar-track,
+        .feature-maps-grid::-webkit-scrollbar-track {
+            background: rgba(40, 40, 40, 0.6);
+            border-radius: 3px;
+        }
+
+        .sliders-container::-webkit-scrollbar-thumb,
+        .feature-maps-grid::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.6);
+            border-radius: 3px;
+        }
+
+        .sliders-container::-webkit-scrollbar-thumb:hover,
+        .feature-maps-grid::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.8);
+        }
+
+        /* Responsive design */
+        @media (max-width: 1200px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .animation-settings {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .animation-buttons {
+                flex-direction: column;
+            }
+            
+            .layer-features {
+                grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+            }
+            
+            .feature-map {
+                width: 50px;
+                height: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>FER CPPN Explorer</h1>
+            <p>Interactive Weight Selection via Feature Map Visualization</p>
+        </div>
+
+        <div class="controls-panel">
+            <div class="model-selector">
+                <button class="model-btn active" data-model="apple" onclick="loadModel('apple')">🍎 Apple</button>
+                <button class="model-btn" data-model="skull" onclick="loadModel('skull')">💀 Skull</button>
+                <button class="model-btn" data-model="butterfly" onclick="loadModel('butterfly')">🦋 Butterfly</button>
+            </div>
+        </div>
+
+        <div class="main-layout">
+            <!-- Picbreeder Section -->
+            <div class="model-section">
+                <div class="section-title picbreeder-title">Picbreeder (UFR)</div>
+                
+                <div class="image-container">
+                    <canvas id="picbreeder-canvas" width="256" height="256"></canvas>
+                    <div class="loading" id="picbreeder-loading" style="display: none;"></div>
+                    <div class="progress-container" id="picbreeder-progress" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="picbreeder-progress-fill"></div>
+                        </div>
+                        <div class="progress-text" id="picbreeder-progress-text">Generating frames...</div>
+                    </div>
+                    <div class="fullscreen-controls">
+                        <button class="fullscreen-btn" onclick="enterFullscreen('picbreeder')" title="Fullscreen">⛶</button>
+                    </div>
+                </div>
+
+                <div class="sliders-container" id="picbreeder-sliders">
+                    <!-- Dynamic sliders will be added here -->
+                </div>
+
+                <div class="feature-maps-container">
+                    <div class="feature-maps-header">
+                        <div class="feature-maps-title">Feature Maps</div>
+                        <button class="load-features-btn" id="load-picbreeder-features" onclick="toggleFeatureMaps('picbreeder')">
+                            Load Features
+                        </button>
+                    </div>
+                    <div class="feature-maps-grid" id="picbreeder-features">
+                        <!-- Feature maps will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- SGD Section -->
+            <div class="model-section">
+                <div class="section-title sgd-title">SGD (FER)</div>
+                
+                <div class="image-container">
+                    <canvas id="sgd-canvas" width="256" height="256"></canvas>
+                    <div class="loading" id="sgd-loading" style="display: none;"></div>
+                    <div class="progress-container" id="sgd-progress" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="sgd-progress-fill"></div>
+                        </div>
+                        <div class="progress-text" id="sgd-progress-text">Generating frames...</div>
+                    </div>
+                    <div class="fullscreen-controls">
+                        <button class="fullscreen-btn" onclick="enterFullscreen('sgd')" title="Fullscreen">⛶</button>
+                    </div>
+                </div>
+
+                <div class="sliders-container" id="sgd-sliders">
+                    <!-- Dynamic sliders will be added here -->
+                </div>
+
+                <div class="feature-maps-container">
+                    <div class="feature-maps-header">
+                        <div class="feature-maps-title">Feature Maps</div>
+                        <button class="load-features-btn" id="load-sgd-features" onclick="toggleFeatureMaps('sgd')">
+                            Load Features
+                        </button>
+                    </div>
+                    <div class="feature-maps-grid" id="sgd-features">
+                        <!-- Feature maps will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Animation Controls -->
+        <div class="animation-controls">
+            <div class="animation-title">🎬 Animation Controls</div>
+            
+            <div class="animation-settings">
+                <div class="setting-group">
+                    <div class="setting-label">Resolution</div>
+                    <input type="range" class="setting-slider" id="resolution-slider" 
+                           min="128" max="1500" step="32" value="256">
+                    <div class="setting-value" id="resolution-value">256px</div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-label">Duration</div>
+                    <input type="range" class="setting-slider" id="duration-slider" 
+                           min="1000" max="8000" step="100" value="4000">
+                    <div class="setting-value" id="duration-value">4.0s</div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-label">Frame Count</div>
+                    <input type="range" class="setting-slider" id="frame-count-slider" 
+                           min="30" max="120" step="10" value="60">
+                    <div class="setting-value" id="frame-count-value">60 frames</div>
+                </div>
+                
+                <div class="setting-item">
+                    <label for="easing-select">Easing:</label>
+                    <select id="easing-select" style="width: 100%; padding: 8px; border-radius: 5px; background: rgba(60, 60, 60, 0.8); color: white; border: 1px solid rgba(255, 255, 255, 0.2);">
+                        <option value="easeInOutCubic">Ease In-Out Cubic</option>
+                        <option value="easeInOutQuad">Ease In-Out Quad</option>
+                        <option value="easeInOutQuart">Ease In-Out Quart</option>
+                        <option value="easeInCubic">Ease In Cubic</option>
+                        <option value="easeOutCubic">Ease Out Cubic</option>
+                        <option value="linear">Linear</option>
+                    </select>
+                </div>
+                
+                <div class="setting-item">
+                    <label for="batch-size-slider">Batch Size: <span id="batch-size-value">20</span></label>
+                    <input type="range" id="batch-size-slider" min="1" max="60" value="20" style="width: 100%;">
+                    <small style="color: #9ca3af; display: block; margin-top: 4px;">Frames per request (higher = faster but more memory)</small>
+                </div>
+            </div>
+
+            <div class="animation-buttons">
+                <div class="keyframe-indicators">
+                    <div class="keyframe-status">IN</div>
+                    <div class="keyframe-dot" id="in-dot"></div>
+                    <div class="keyframe-status">OUT</div>
+                    <div class="keyframe-dot" id="out-dot"></div>
+                </div>
+                
+                <button class="anim-btn" id="play-btn" onclick="toggleAnimation()" disabled>
+                    ▶ Set Keyframes First
+                </button>
+                
+                <button class="fullscreen-btn split-fullscreen" onclick="enterSplitFullscreen()" title="Split Fullscreen">
+                    🔲 Split View
+                </button>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h4>🎯 How to Use</h4>
+            <p><strong>1. Load Feature Maps:</strong> Click "Load Features" to see the internal representations</p>
+            <p><strong>2. Add Sliders:</strong> Click on any feature map to add a weight slider for that neuron</p>
+            <p><strong>3. Select Weight:</strong> Click on a weight slider box to select it (green border indicates selection)</p>
+            <p><strong>4. Set Keyframes:</strong> With weight selected, press <span class="key">I</span> for IN point, <span class="key">O</span> for OUT point</p>
+            <p><strong>5. Animate:</strong> Press <span class="key">Space</span> to start/restart animation or <span class="key">R</span> for bounce loop mode</p>
+            <p><strong>6. Fullscreen:</strong> Click <span class="key">⛶</span> on images for fullscreen, or <span class="key">🔲 Split View</span> for side-by-side comparison</p>
+            <p><strong>7. Visual Indicators:</strong> Blue left border = some keyframes, Green left border = both keyframes set</p>
+            <p><strong>Note:</strong> Animations work in fullscreen mode too! Bounce mode loops forward and backward continuously. Press <span class="key">Esc</span> to exit fullscreen.</p>
+        </div>
+    </div>
+
+    <script>
+        let currentModel = 'apple';
+        let modelData = {};
+        let activeSliders = {
+            picbreeder: {},
+            sgd: {}
+        };
+        let featureMapsData = {
+            picbreeder: null,
+            sgd: null
+        };
+        let selectedWeight = null; // Currently selected weight for keyframe setting
+        let weightKeyframes = {
+            picbreeder: {},
+            sgd: {}
+        }; // Per-weight keyframes: {weightId: {in: value, out: value}}
+        let isAnimating = false;
+        let isGenerating = false;
+        let animationFrames = {
+            picbreeder: [],
+            sgd: []
+        };
+        let canvases = {};
+        let animationSettings = {
+            frameCount: 60,
+            duration: 3000, // ms
+            resolution: 256,
+            easing: 'easeInOutCubic',
+            batchSize: 20  // Number of frames to generate per batch request
+        };
+
+        // Fullscreen animation support
+        let fullscreenCanvases = {
+            single: null,
+            split: { picbreeder: null, sgd: null }
+        };
+        let animationMode = 'normal'; // 'normal' or 'bounce'
+        let animationInterval = null;
+
+        // Initialize the app
+        async function init() {
+            try {
+                console.log('Initializing FER CPPN Explorer...');
+                
+                // Setup canvases first
+                const canvasSuccess = setupCanvases();
+                if (!canvasSuccess) {
+                    console.error('Failed to setup canvases');
+                    return;
+                }
+                
+                // Setup other components
+                setupEventListeners();
+                setupKeyboardListeners();
+                setupAnimationControls();
+                
+                // Load model data
+                await loadModelData();
+                
+                // Load initial model
+                await loadModel(currentModel);
+                
+                console.log('Initialization complete');
+            } catch (error) {
+                console.error('Error during initialization:', error);
+            }
+        }
+
+        // Setup canvas contexts
+        function setupCanvases() {
+            const picbreederCanvas = document.getElementById('picbreeder-canvas');
+            const sgdCanvas = document.getElementById('sgd-canvas');
+            
+            if (!picbreederCanvas || !sgdCanvas) {
+                console.error('Canvas elements not found');
+                return false;
+            }
+            
+            try {
+                canvases = {
+                    picbreeder: {
+                        canvas: picbreederCanvas,
+                        ctx: picbreederCanvas.getContext('2d')
+                    },
+                    sgd: {
+                        canvas: sgdCanvas,
+                        ctx: sgdCanvas.getContext('2d')
+                    }
+                };
+                
+                updateCanvasSize();
+                console.log('Canvases initialized successfully');
+                return true;
+            } catch (error) {
+                console.error('Error setting up canvases:', error);
+                return false;
+            }
+        }
+
+        function updateCanvasSize() {
+            if (!canvases) return;
+            
+            Object.values(canvases).forEach(({ canvas }) => {
+                if (canvas) {
+                    canvas.width = animationSettings.resolution;
+                    canvas.height = animationSettings.resolution;
+                }
+            });
+        }
+
+        function setupAnimationControls() {
+            const resolutionSlider = document.getElementById('resolution-slider');
+            const resolutionValue = document.getElementById('resolution-value');
+            resolutionSlider.addEventListener('input', (e) => {
+                animationSettings.resolution = parseInt(e.target.value);
+                resolutionValue.textContent = `${animationSettings.resolution}px`;
+                updateCanvasSize();
+                clearAnimationCache();
+            });
+
+            const durationSlider = document.getElementById('duration-slider');
+            const durationValue = document.getElementById('duration-value');
+            durationSlider.addEventListener('input', (e) => {
+                animationSettings.duration = parseInt(e.target.value);
+                durationValue.textContent = `${animationSettings.duration}ms`;
+            });
+
+            const frameCountSlider = document.getElementById('frame-count-slider');
+            const frameCountValue = document.getElementById('frame-count-value');
+            frameCountSlider.addEventListener('input', (e) => {
+                animationSettings.frameCount = parseInt(e.target.value);
+                frameCountValue.textContent = `${animationSettings.frameCount}`;
+                clearAnimationCache();
+            });
+
+            const easingSelect = document.getElementById('easing-select');
+            easingSelect.addEventListener('change', (e) => {
+                animationSettings.easing = e.target.value;
+                clearAnimationCache();
+            });
+            
+            const batchSizeSlider = document.getElementById('batch-size-slider');
+            const batchSizeValue = document.getElementById('batch-size-value');
+            batchSizeSlider.addEventListener('input', (e) => {
+                animationSettings.batchSize = parseInt(e.target.value);
+                batchSizeValue.textContent = `${animationSettings.batchSize}`;
+            });
+        }
+
+        function clearAnimationCache() {
+            animationFrames.picbreeder = [];
+            animationFrames.sgd = [];
+            updatePlayButton();
+            console.log('Animation cache cleared');
+        }
+
+        function setupEventListeners() {
+            // Event listeners for other controls can be added here
+            console.log('Event listeners set up');
+        }
+
+        function setupKeyboardListeners() {
+            document.addEventListener('keydown', (e) => {
+                // Don't trigger shortcuts if user is typing in an input field
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+                    return;
+                }
+                
+                if (e.code === 'KeyI') {
+                    e.preventDefault();
+                    console.log('I key pressed - setting IN keyframe');
+                    setKeyframe('in');
+                } else if (e.code === 'KeyO') {
+                    e.preventDefault();
+                    console.log('O key pressed - setting OUT keyframe');
+                    setKeyframe('out');
+                } else if (e.code === 'Space') {
+                    e.preventDefault();
+                    console.log('Space key pressed - starting/restarting animation');
+                    animationMode = 'normal';
+                    startOrRestartAnimation();
+                } else if (e.code === 'KeyR') {
+                    e.preventDefault();
+                    console.log('R key pressed - starting bounce loop animation');
+                    animationMode = 'bounce';
+                    startOrRestartAnimation();
+                }
+            });
+            
+            console.log('Keyboard listeners set up - Press I for IN keyframe, O for OUT keyframe, Space to start/restart, R for bounce loop');
+        }
+
+        async function loadModelData() {
+            try {
+                const response = await fetch('/api/models');
+                const data = await response.json();
+                modelData = data.models;
+            } catch (error) {
+                console.error('Error loading model data:', error);
+            }
+        }
+
+        async function loadModel(model) {
+            currentModel = model;
+            
+            // Clear existing sliders and feature maps
+            activeSliders.picbreeder = {};
+            activeSliders.sgd = {};
+            featureMapsData.picbreeder = null;
+            featureMapsData.sgd = null;
+            
+            // Clear weight selection and keyframes
+            selectedWeight = null;
+            weightKeyframes = {
+                picbreeder: {},
+                sgd: {}
+            };
+            
+            clearKeyframes();
+            clearSliders();
+            clearFeatureMaps();
+            clearAnimationCache();
+            
+            // Update active button
+            document.querySelectorAll('.model-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.model === model) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // Generate initial images
+            await updateImages();
+            
+            // Load suggested sliders for Picbreeder model
+            loadSuggestedSliders();
+        }
+
+        function loadSuggestedSliders() {
+            const picbreederKey = `picbreeder_${currentModel}`;
+            if (modelData[picbreederKey] && modelData[picbreederKey].weight_suggestions) {
+                const suggestions = modelData[picbreederKey].weight_suggestions;
+                if (suggestions.weight_ids && suggestions.weight_ids.length > 0) {
+                    suggestions.weight_ids.forEach((weightId, index) => {
+                        const description = suggestions.descriptions[index] || `Weight ${weightId}`;
+                        addSlider('picbreeder', weightId, description);
+                    });
+                }
+            }
+        }
+
+        function clearSliders() {
+            document.getElementById('picbreeder-sliders').innerHTML = '';
+            document.getElementById('sgd-sliders').innerHTML = '';
+        }
+
+        function clearFeatureMaps() {
+            document.getElementById('picbreeder-features').innerHTML = '';
+            document.getElementById('sgd-features').innerHTML = '';
+            document.getElementById('picbreeder-features').classList.remove('visible');
+            document.getElementById('sgd-features').classList.remove('visible');
+            document.getElementById('load-picbreeder-features').textContent = 'Load Features';
+            document.getElementById('load-sgd-features').textContent = 'Load Features';
+        }
+
+        async function toggleFeatureMaps(modelType) {
+            const button = document.getElementById(`load-${modelType}-features`);
+            const grid = document.getElementById(`${modelType}-features`);
+            
+            if (grid.classList.contains('visible')) {
+                // Hide feature maps
+                grid.classList.remove('visible');
+                button.textContent = 'Load Features';
+                return;
+            }
+            
+            // Load and show feature maps
+            button.textContent = 'Loading...';
+            button.disabled = true;
+            
+            try {
+                await loadFeatureMaps(modelType);
+                grid.classList.add('visible');
+                button.textContent = 'Hide Features';
+            } catch (error) {
+                console.error('Error loading feature maps:', error);
+                button.textContent = 'Load Features';
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        async function loadFeatureMaps(modelType) {
+            const modelKey = `${modelType}_${currentModel}`;
+            
+            try {
+                const response = await fetch(`/api/feature_maps/${modelKey}?img_size=64`);
+                if (!response.ok) throw new Error('Failed to load feature maps');
+                
+                const data = await response.json();
+                featureMapsData[modelType] = data;
+                
+                displayFeatureMaps(modelType, data);
+            } catch (error) {
+                console.error('Error loading feature maps:', error);
+                throw error;
+            }
+        }
+
+        function displayFeatureMaps(modelType, data) {
+            const container = document.getElementById(`${modelType}-features`);
+            container.innerHTML = '';
+            
+            data.feature_maps.forEach(layer => {
+                const layerDiv = document.createElement('div');
+                layerDiv.className = 'layer-section';
+                
+                const layerTitle = document.createElement('div');
+                layerTitle.className = 'layer-title';
+                layerTitle.textContent = `Layer ${layer.layer} (${layer.features.length} neurons)`;
+                layerDiv.appendChild(layerTitle);
+                
+                const featuresGrid = document.createElement('div');
+                featuresGrid.className = 'layer-features';
+                
+                layer.features.forEach(feature => {
+                    const featureDiv = document.createElement('div');
+                    featureDiv.className = 'feature-map';
+                    featureDiv.dataset.weightId = feature.weight_id;
+                    featureDiv.dataset.modelType = modelType;
+                    
+                    // Check if this weight is already selected
+                    if (activeSliders[modelType][feature.weight_id]) {
+                        featureDiv.classList.add('selected');
+                    }
+                    
+                    const img = document.createElement('img');
+                    img.src = feature.image;
+                    img.alt = `Weight ${feature.weight_id}`;
+                    
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'feature-tooltip';
+                    tooltip.textContent = `W${feature.weight_id}`;
+                    
+                    featureDiv.appendChild(img);
+                    featureDiv.appendChild(tooltip);
+                    
+                    featureDiv.addEventListener('click', () => {
+                        toggleFeatureSelection(modelType, feature.weight_id, featureDiv);
+                    });
+                    
+                    featuresGrid.appendChild(featureDiv);
+                });
+                
+                layerDiv.appendChild(featuresGrid);
+                container.appendChild(layerDiv);
+            });
+        }
+
+        function toggleFeatureSelection(modelType, weightId, featureDiv) {
+            if (activeSliders[modelType][weightId]) {
+                // Remove slider
+                removeSlider(modelType, weightId);
+                featureDiv.classList.remove('selected');
+            } else {
+                // Add slider
+                addSlider(modelType, weightId, `Weight ${weightId}`);
+                featureDiv.classList.add('selected');
+            }
+        }
+
+        function addSlider(modelType, weightId, description) {
+            if (activeSliders[modelType][weightId]) return; // Already exists
+            
+            activeSliders[modelType][weightId] = {
+                value: 0,
+                description: description
+            };
+            
+            const container = document.getElementById(`${modelType}-sliders`);
+            const sliderGroup = document.createElement('div');
+            sliderGroup.className = 'slider-group';
+            sliderGroup.id = `${modelType}-slider-${weightId}`;
+            
+            sliderGroup.innerHTML = `
+                <div class="slider-header">
+                    <div class="slider-label">${description}</div>
+                    <button class="remove-slider-btn" onclick="removeSlider('${modelType}', ${weightId})">×</button>
+                </div>
+                <div class="weight-info">Weight ID: ${weightId} | Layer: ? | Neuron: ?</div>
+                <div class="slider-track-container">
+                    <div class="keyframe-bar in-bar" id="${modelType}-in-bar-${weightId}"></div>
+                    <div class="keyframe-bar out-bar" id="${modelType}-out-bar-${weightId}"></div>
+                    <input type="range" class="slider" 
+                           id="${modelType}-slider-input-${weightId}" 
+                           min="-1" max="1" step="0.01" value="0">
+                </div>
+                <div class="slider-value" id="${modelType}-value-${weightId}">0.000</div>
+                <div class="keyframe-indicators-slider" id="${modelType}-keyframes-${weightId}">
+                    <div class="keyframe-value-row">
+                        <span class="keyframe-label">IN:</span>
+                        <span class="keyframe-value" id="${modelType}-in-value-${weightId}">Not Set</span>
+                    </div>
+                    <div class="keyframe-value-row">
+                        <span class="keyframe-label">OUT:</span>
+                        <span class="keyframe-value" id="${modelType}-out-value-${weightId}">Not Set</span>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(sliderGroup);
+            
+            // Add click handler for weight selection
+            sliderGroup.addEventListener('click', (e) => {
+                // Don't trigger selection if clicking on slider or remove button
+                if (e.target.type === 'range' || e.target.classList.contains('remove-slider-btn')) {
+                    return;
+                }
+                selectWeight(modelType, weightId);
+            });
+            
+            // Add event listener for slider input
+            const slider = document.getElementById(`${modelType}-slider-input-${weightId}`);
+            const valueDisplay = document.getElementById(`${modelType}-value-${weightId}`);
+            
+            slider.addEventListener('input', (e) => {
+                if (isAnimating) return;
+                const value = parseFloat(e.target.value);
+                valueDisplay.textContent = value.toFixed(3);
+                activeSliders[modelType][weightId].value = value;
+                debounceUpdateImages();
+            });
+            
+            // Update feature map selection if visible
+            updateFeatureMapSelection(modelType, weightId, true);
+        }
+
+        function removeSlider(modelType, weightId) {
+            const sliderElement = document.getElementById(`${modelType}-slider-${weightId}`);
+            if (sliderElement) {
+                sliderElement.remove();
+            }
+            
+            delete activeSliders[modelType][weightId];
+            
+            // Clear keyframes for this weight
+            if (weightKeyframes[modelType] && weightKeyframes[modelType][weightId]) {
+                delete weightKeyframes[modelType][weightId];
+                updateKeyframeUI();
+                updateSliderKeyframeIndicators();
+                updatePlayButton();
+                clearAnimationCache();
+            }
+            
+            // Clear selection if this weight was selected
+            if (selectedWeight && selectedWeight.modelType === modelType && selectedWeight.weightId == weightId) {
+                selectedWeight = null;
+                updateKeyframeUI();
+            }
+            
+            // Update feature map selection if visible
+            updateFeatureMapSelection(modelType, weightId, false);
+            
+            // Update images
+            debounceUpdateImages();
+        }
+
+        function updateFeatureMapSelection(modelType, weightId, selected) {
+            const featureDiv = document.querySelector(`[data-model-type="${modelType}"][data-weight-id="${weightId}"]`);
+            if (featureDiv) {
+                featureDiv.classList.toggle('selected', selected);
+            }
+        }
+
+        let updateTimeout;
+        function debounceUpdateImages() {
+            clearTimeout(updateTimeout);
+            updateTimeout = setTimeout(updateImages, 100);
+        }
+
+        async function updateImages() {
+            const picbreederWeights = getWeightDeltas('picbreeder');
+            const sgdWeights = getWeightDeltas('sgd');
+            
+            // Show loading indicators
+            document.getElementById('picbreeder-loading').style.display = 'block';
+            document.getElementById('sgd-loading').style.display = 'block';
+            
+            try {
+                const response = await fetch(`/api/generate_comparison/${currentModel}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        weight_deltas: { ...picbreederWeights, ...sgdWeights },
+                        img_size: animationSettings.resolution
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Draw images on canvases with error handling
+                try {
+                    await drawImageOnCanvas('picbreeder', data.picbreeder);
+                } catch (error) {
+                    console.error('Failed to draw picbreeder image:', error);
+                }
+                
+                try {
+                    await drawImageOnCanvas('sgd', data.sgd);
+                } catch (error) {
+                    console.error('Failed to draw SGD image:', error);
+                }
+                
+            } catch (error) {
+                console.error('Error updating images:', error);
+            } finally {
+                // Hide loading indicators
+                document.getElementById('picbreeder-loading').style.display = 'none';
+                document.getElementById('sgd-loading').style.display = 'none';
+            }
+        }
+
+        function getWeightDeltas(modelType) {
+            const deltas = {};
+            Object.keys(activeSliders[modelType]).forEach(weightId => {
+                const value = activeSliders[modelType][weightId].value;
+                if (value !== 0) {
+                    deltas[parseInt(weightId)] = value;
+                }
+            });
+            return deltas;
+        }
+
+        async function drawImageOnCanvas(modelType, imageDataUrl) {
+            if (!canvases || !canvases[modelType]) {
+                console.error(`Canvas not initialized for ${modelType}`);
+                return;
+            }
+            
+            const { canvas, ctx } = canvases[modelType];
+            
+            if (!canvas || !ctx) {
+                console.error(`Canvas or context not available for ${modelType}`);
+                return;
+            }
+            
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    try {
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        
+                        // Also draw to fullscreen canvases if they exist
+                        drawToFullscreenCanvases(modelType, img);
+                        
+                        resolve();
+                    } catch (error) {
+                        console.error(`Error drawing image for ${modelType}:`, error);
+                        reject(error);
+                    }
+                };
+                img.onerror = (error) => {
+                    console.error(`Error loading image for ${modelType}:`, error);
+                    reject(error);
+                };
+                img.src = imageDataUrl;
+            });
+        }
+
+        function drawToFullscreenCanvases(modelType, img) {
+            // Update single fullscreen if it matches this model type
+            if (fullscreenCanvases.single && fullscreenCanvases.single.modelType === modelType) {
+                const { canvas, ctx } = fullscreenCanvases.single;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            }
+            
+            // Update split fullscreen for this model type
+            if (fullscreenCanvases.split[modelType]) {
+                const { canvas, ctx } = fullscreenCanvases.split[modelType];
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        // Animation functions
+        function setKeyframe(type) {
+            if (isAnimating || isGenerating) return;
+            
+            if (!selectedWeight) {
+                console.log('No weight selected. Click on a weight slider to select it first.');
+                return;
+            }
+            
+            const { modelType, weightId } = selectedWeight;
+            
+            // Initialize weight keyframes if not exists
+            if (!weightKeyframes[modelType][weightId]) {
+                weightKeyframes[modelType][weightId] = {};
+            }
+            
+            // Get current value for this weight
+            const currentValue = activeSliders[modelType][weightId]?.value || 0;
+            weightKeyframes[modelType][weightId][type] = currentValue;
+            
+            updateKeyframeUI();
+            updateSliderKeyframeIndicators();
+            clearAnimationCache();
+            updatePlayButton();
+            
+            // Visual feedback
+            const dot = document.getElementById(`${type}-dot`);
+            dot.style.transform = 'scale(1.3)';
+            setTimeout(() => {
+                dot.style.transform = 'scale(1)';
+            }, 200);
+            
+            console.log(`${type.toUpperCase()} keyframe set for ${modelType} weight ${weightId}:`, currentValue);
+            
+            // Update the slider value display to show the current value
+            const valueDisplay = document.getElementById(`${modelType}-value-${weightId}`);
+            if (valueDisplay) {
+                valueDisplay.textContent = currentValue.toFixed(3);
+            }
+        }
+
+        function updateKeyframeUI() {
+            const inDot = document.getElementById('in-dot');
+            const outDot = document.getElementById('out-dot');
+            
+            if (selectedWeight) {
+                const { modelType, weightId } = selectedWeight;
+                const weightKeyframe = weightKeyframes[modelType][weightId];
+                
+                inDot.classList.toggle('set', weightKeyframe && weightKeyframe.in !== undefined);
+                outDot.classList.toggle('set', weightKeyframe && weightKeyframe.out !== undefined);
+            } else {
+                inDot.classList.remove('set');
+                outDot.classList.remove('set');
+            }
+        }
+
+        function updateSliderKeyframeIndicators() {
+            // Update visual indicators for all sliders
+            ['picbreeder', 'sgd'].forEach(modelType => {
+                Object.keys(activeSliders[modelType]).forEach(weightId => {
+                    const sliderElement = document.getElementById(`${modelType}-slider-${weightId}`);
+                    const keyframeIndicator = document.getElementById(`${modelType}-keyframes-${weightId}`);
+                    const inValueElement = document.getElementById(`${modelType}-in-value-${weightId}`);
+                    const outValueElement = document.getElementById(`${modelType}-out-value-${weightId}`);
+                    
+                    if (sliderElement && keyframeIndicator && inValueElement && outValueElement) {
+                        const keyframe = weightKeyframes[modelType][weightId];
+                        const hasIn = keyframe && keyframe.in !== undefined;
+                        const hasOut = keyframe && keyframe.out !== undefined;
+                        
+                        // Update border indicators
+                        sliderElement.classList.toggle('has-keyframes', hasIn || hasOut);
+                        sliderElement.classList.toggle('has-both-keyframes', hasIn && hasOut);
+                        
+                        // Show/hide keyframe value indicators
+                        keyframeIndicator.classList.toggle('visible', hasIn || hasOut);
+                        
+                        // Update IN value
+                        if (hasIn) {
+                            inValueElement.textContent = keyframe.in.toFixed(3);
+                            inValueElement.style.color = '#10b981';
+                        } else {
+                            inValueElement.textContent = 'Not Set';
+                            inValueElement.style.color = '#64748b';
+                        }
+                        
+                        // Update OUT value
+                        if (hasOut) {
+                            outValueElement.textContent = keyframe.out.toFixed(3);
+                            outValueElement.style.color = '#10b981';
+                        } else {
+                            outValueElement.textContent = 'Not Set';
+                            outValueElement.style.color = '#64748b';
+                        }
+                        
+                        // Update keyframe bar positions
+                        updateKeyframeBars(modelType, weightId, keyframe);
+                    }
+                });
+            });
+        }
+
+        function updateKeyframeBars(modelType, weightId, keyframe) {
+            const inBar = document.getElementById(`${modelType}-in-bar-${weightId}`);
+            const outBar = document.getElementById(`${modelType}-out-bar-${weightId}`);
+            const slider = document.getElementById(`${modelType}-slider-input-${weightId}`);
+            
+            if (!inBar || !outBar || !slider) return;
+            
+            const sliderRect = slider.getBoundingClientRect();
+            const sliderWidth = sliderRect.width;
+            
+            // Convert value (-1 to 1) to position (0 to 100%)
+            function valueToPosition(value) {
+                return ((value + 1) / 2) * 100; // Convert -1..1 to 0..100%
+            }
+            
+            // Update IN bar
+            if (keyframe && keyframe.in !== undefined) {
+                const inPosition = valueToPosition(keyframe.in);
+                inBar.style.left = `${inPosition}%`;
+                inBar.classList.add('visible');
+            } else {
+                inBar.classList.remove('visible');
+            }
+            
+            // Update OUT bar
+            if (keyframe && keyframe.out !== undefined) {
+                const outPosition = valueToPosition(keyframe.out);
+                outBar.style.left = `${outPosition}%`;
+                outBar.classList.add('visible');
+            } else {
+                outBar.classList.remove('visible');
+            }
+        }
+
+        function updatePlayButton() {
+            const playBtn = document.getElementById('play-btn');
+            
+            // Check if any weight has both in and out keyframes
+            let hasAnimatableWeights = false;
+            ['picbreeder', 'sgd'].forEach(modelType => {
+                Object.keys(weightKeyframes[modelType]).forEach(weightId => {
+                    const keyframe = weightKeyframes[modelType][weightId];
+                    if (keyframe && keyframe.in !== undefined && keyframe.out !== undefined) {
+                        hasAnimatableWeights = true;
+                    }
+                });
+            });
+            
+            playBtn.disabled = !hasAnimatableWeights;
+            
+            if (isGenerating) {
+                playBtn.textContent = '🎬 Generating...';
+                playBtn.classList.add('generating');
+            } else if (isAnimating) {
+                const modeText = animationMode === 'bounce' ? 'Bounce Loop' : 'Playing';
+                playBtn.textContent = `⏸ Stop ${modeText}`;
+                playBtn.classList.remove('generating');
+            } else if (hasAnimatableWeights) {
+                playBtn.textContent = '▶ Play Animation';
+                playBtn.classList.remove('generating');
+            } else {
+                playBtn.textContent = '▶ Select Weight & Set Keyframes';
+                playBtn.classList.remove('generating');
+            }
+        }
+
+        function clearKeyframes() {
+            selectedWeight = null;
+            weightKeyframes = {
+                picbreeder: {},
+                sgd: {}
+            };
+            updateKeyframeUI();
+            updateSliderKeyframeIndicators();
+            updatePlayButton();
+            clearAnimationCache();
+            
+            // Clear selection from all sliders
+            document.querySelectorAll('.slider-group').forEach(group => {
+                group.classList.remove('selected');
+            });
+        }
+
+        function selectWeight(modelType, weightId) {
+            // Clear previous selection
+            document.querySelectorAll('.slider-group').forEach(group => {
+                group.classList.remove('selected');
+            });
+            
+            // Set new selection
+            selectedWeight = { modelType, weightId };
+            const sliderElement = document.getElementById(`${modelType}-slider-${weightId}`);
+            if (sliderElement) {
+                sliderElement.classList.add('selected');
+            }
+            
+            updateKeyframeUI();
+            
+            console.log(`Selected weight: ${modelType} ${weightId}`);
+        }
+
+        async function startOrRestartAnimation() {
+            if (isGenerating) return;
+            
+            // Always stop current animation if running
+            if (isAnimating) {
+                stopAnimation();
+            }
+            
+            // Check if any weight has both keyframes
+            let canAnimate = false;
+            ['picbreeder', 'sgd'].forEach(modelType => {
+                Object.keys(weightKeyframes[modelType]).forEach(weightId => {
+                    const keyframe = weightKeyframes[modelType][weightId];
+                    if (keyframe && keyframe.in !== undefined && keyframe.out !== undefined) {
+                        canAnimate = true;
+                    }
+                });
+            });
+            
+            if (!canAnimate) {
+                console.log('Need to select a weight and set both IN and OUT keyframes to animate');
+                return;
+            }
+            
+            // Generate frames if not cached or if frames don't exist for both models
+            const needsGeneration = animationFrames.picbreeder.length === 0 || animationFrames.sgd.length === 0;
+            
+            if (needsGeneration) {
+                const success = await generateAnimationFrames();
+                if (!success) return;
+            }
+            
+            playAnimation();
+        }
+
+        async function toggleAnimation() {
+            // For button clicks, use the old toggle behavior
+            if (isAnimating) {
+                stopAnimation();
+                return;
+            }
+            
+            await startOrRestartAnimation();
+        }
+
+        async function generateAnimationFrames() {
+            if (isGenerating) return false;
+            
+            // Find weights that have both keyframes
+            let animatableWeights = [];
+            ['picbreeder', 'sgd'].forEach(modelType => {
+                Object.keys(weightKeyframes[modelType]).forEach(weightId => {
+                    const keyframe = weightKeyframes[modelType][weightId];
+                    if (keyframe && keyframe.in !== undefined && keyframe.out !== undefined) {
+                        animatableWeights.push({ modelType, weightId, keyframe });
+                    }
+                });
+            });
+            
+            if (animatableWeights.length === 0) {
+                console.log('No weights with both keyframes found');
+                return false;
+            }
+            
+            isGenerating = true;
+            updatePlayButton();
+            
+            // Show progress bars
+            showProgress(true);
+            updateProgress(0, 'Preparing animation frames...');
+            
+            console.log('Generating animation frames for', animatableWeights.length, 'weights...');
+            
+            try {
+                const frameCount = animationSettings.frameCount;
+                const easingFunction = easingFunctions[animationSettings.easing];
+                const batchSize = animationSettings.batchSize;
+                
+                // Clear existing frames
+                animationFrames.picbreeder = [];
+                animationFrames.sgd = [];
+                
+                // Prepare all frame data first
+                const allFrameData = [];
+                for (let frame = 0; frame < frameCount; frame++) {
+                    const t = frame / (frameCount - 1); // 0 to 1
+                    const easedT = easingFunction(t);
+                    
+                    // Calculate interpolated values for all animatable weights
+                    const picbreederWeights = getWeightDeltas('picbreeder');
+                    const sgdWeights = getWeightDeltas('sgd');
+                    
+                    // Apply interpolated values for weights with keyframes
+                    animatableWeights.forEach(({ modelType, weightId, keyframe }) => {
+                        const interpolatedValue = keyframe.in + (keyframe.out - keyframe.in) * easedT;
+                        if (modelType === 'picbreeder') {
+                            picbreederWeights[weightId] = interpolatedValue;
+                        } else {
+                            sgdWeights[weightId] = interpolatedValue;
+                        }
+                    });
+                    
+                    allFrameData.push({
+                        picbreeder: picbreederWeights,
+                        sgd: sgdWeights
+                    });
+                }
+                
+                // Process frames in batches
+                let processedFrames = 0;
+                const totalBatches = Math.ceil(frameCount / batchSize);
+                
+                for (let batchStart = 0; batchStart < frameCount; batchStart += batchSize) {
+                    const batchEnd = Math.min(batchStart + batchSize, frameCount);
+                    const currentBatchSize = batchEnd - batchStart;
+                    const batchFrames = allFrameData.slice(batchStart, batchEnd);
+                    const currentBatch = Math.floor(batchStart / batchSize) + 1;
+                    
+                    // Update progress
+                    const progress = (processedFrames / frameCount) * 100;
+                    updateProgress(progress, `Generating batch ${currentBatch}/${totalBatches} (${processedFrames + 1}-${batchEnd} of ${frameCount})`);
+                    
+                    console.log(`Generating batch ${currentBatch}/${totalBatches}: frames ${batchStart + 1}-${batchEnd}`);
+                    
+                    // Send batch request
+                    const response = await fetch(`/api/generate_batch/${currentModel}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            frames: batchFrames,
+                            img_size: animationSettings.resolution
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Batch generation failed for frames ${batchStart + 1}-${batchEnd}`);
+                    }
+                    
+                    const batchData = await response.json();
+                    
+                    // Add frames from this batch to our collection
+                    animationFrames.picbreeder.push(...batchData.picbreeder_frames);
+                    animationFrames.sgd.push(...batchData.sgd_frames);
+                    
+                    processedFrames += currentBatchSize;
+                    
+                    // Update progress
+                    const finalProgress = (processedFrames / frameCount) * 100;
+                    updateProgress(finalProgress, `Completed batch ${currentBatch}/${totalBatches}`);
+                    
+                    console.log(`Completed batch: ${processedFrames}/${frameCount} frames generated`);
+                }
+                
+                updateProgress(100, 'Animation ready!');
+                setTimeout(() => showProgress(false), 1000);
+                
+                console.log('Animation frames generated successfully');
+                return true;
+                
+            } catch (error) {
+                console.error('Error generating animation frames:', error);
+                updateProgress(0, 'Generation failed!');
+                setTimeout(() => showProgress(false), 2000);
+                return false;
+            } finally {
+                isGenerating = false;
+                updatePlayButton();
+            }
+        }
+
+        function playAnimation() {
+            // Check if we have frames for both models
+            if (animationFrames.picbreeder.length === 0 || animationFrames.sgd.length === 0) {
+                console.error('No animation frames to play');
+                return;
+            }
+            
+            isAnimating = true;
+            updatePlayButton();
+            
+            const frameCount = animationFrames.picbreeder.length;
+            const frameDuration = animationSettings.duration / frameCount;
+            
+            let currentFrame = 0;
+            let direction = 1; // 1 for forward, -1 for backward
+            let bounceCount = 0; // Track bounce cycles
+            
+            const playFrame = () => {
+                if (!isAnimating) {
+                    stopAnimation();
+                    return;
+                }
+                
+                console.log(`Playing frame ${currentFrame + 1}/${frameCount} (${animationMode} mode)`);
+                
+                // Draw current frame on both canvases
+                drawImageOnCanvas('picbreeder', animationFrames.picbreeder[currentFrame]);
+                drawImageOnCanvas('sgd', animationFrames.sgd[currentFrame]);
+                
+                // Update frame index based on mode
+                if (animationMode === 'bounce') {
+                    currentFrame += direction;
+                    
+                    // Check if we need to reverse direction
+                    if (currentFrame >= frameCount - 1) {
+                        direction = -1; // Start going backward
+                        currentFrame = frameCount - 1;
+                        bounceCount++;
+                    } else if (currentFrame <= 0) {
+                        direction = 1; // Start going forward
+                        currentFrame = 0;
+                        bounceCount++;
+                    }
+                    
+                    // Continue bouncing indefinitely
+                    setTimeout(playFrame, frameDuration);
+                } else {
+                    // Normal mode - play once
+                    currentFrame++;
+                    
+                    if (currentFrame < frameCount) {
+                        setTimeout(playFrame, frameDuration);
+                    } else {
+                        // Animation complete
+                        setTimeout(() => stopAnimation(), frameDuration);
+                    }
+                }
+            };
+            
+            const modeText = animationMode === 'bounce' ? 'bounce loop' : 'normal';
+            console.log(`Playing ${modeText} animation: ${frameCount} frames over ${animationSettings.duration}ms per cycle`);
+            playFrame();
+        }
+
+        function stopAnimation() {
+            isAnimating = false;
+            
+            // Clear any running intervals
+            if (animationInterval) {
+                clearInterval(animationInterval);
+                animationInterval = null;
+            }
+            
+            updatePlayButton();
+            console.log('Animation stopped');
+            
+            // Return to current slider state
+            updateImages();
+        }
+
+        // Easing functions
+        const easingFunctions = {
+            linear: (t) => t,
+            easeInOutCubic: (t) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2,
+            easeInOutQuad: (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2,
+            easeInOutQuart: (t) => t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2,
+            easeInCubic: (t) => t * t * t,
+            easeOutCubic: (t) => 1 - Math.pow(1 - t, 3)
+        };
+
+        // Fullscreen functions
+        function enterFullscreen(modelType) {
+            const canvas = canvases[modelType].canvas;
+            if (!canvas) return;
+            
+            // Create fullscreen container
+            const fullscreenDiv = document.createElement('div');
+            fullscreenDiv.className = 'fullscreen-container';
+            fullscreenDiv.id = 'fullscreen-container';
+            
+            // Create content wrapper
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'fullscreen-content';
+            
+            // Clone the canvas
+            const clonedCanvas = document.createElement('canvas');
+            clonedCanvas.width = canvas.width;
+            clonedCanvas.height = canvas.height;
+            const clonedCtx = clonedCanvas.getContext('2d');
+            clonedCtx.drawImage(canvas, 0, 0);
+            
+            // Store reference for animation
+            fullscreenCanvases.single = {
+                canvas: clonedCanvas,
+                ctx: clonedCtx,
+                modelType: modelType
+            };
+            
+            // Create close button
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'fullscreen-close';
+            closeBtn.innerHTML = '×';
+            closeBtn.onclick = exitFullscreen;
+            
+            // Add title
+            const title = document.createElement('h2');
+            title.style.color = 'white';
+            title.style.textAlign = 'center';
+            title.style.marginBottom = '20px';
+            title.textContent = modelType === 'picbreeder' ? 'Picbreeder (UFR)' : 'SGD (FER)';
+            
+            contentDiv.appendChild(title);
+            contentDiv.appendChild(clonedCanvas);
+            fullscreenDiv.appendChild(contentDiv);
+            fullscreenDiv.appendChild(closeBtn);
+            
+            document.body.appendChild(fullscreenDiv);
+            
+            // Add escape key listener
+            document.addEventListener('keydown', onFullscreenKeydown);
+            
+            console.log(`Entered fullscreen for ${modelType}`);
+        }
+
+        function enterSplitFullscreen() {
+            const picbreederCanvas = canvases.picbreeder.canvas;
+            const sgdCanvas = canvases.sgd.canvas;
+            
+            if (!picbreederCanvas || !sgdCanvas) return;
+            
+            // Create split fullscreen container
+            const splitDiv = document.createElement('div');
+            splitDiv.className = 'split-fullscreen-container';
+            splitDiv.id = 'split-fullscreen-container';
+            
+            // Create left panel (Picbreeder)
+            const leftPanel = document.createElement('div');
+            leftPanel.className = 'split-panel';
+            
+            const leftTitle = document.createElement('h3');
+            leftTitle.textContent = 'Picbreeder (UFR)';
+            leftTitle.style.background = 'linear-gradient(45deg, #10b981, #3b82f6)';
+            leftTitle.style.webkitBackgroundClip = 'text';
+            leftTitle.style.webkitTextFillColor = 'transparent';
+            
+            const leftCanvas = document.createElement('canvas');
+            leftCanvas.width = picbreederCanvas.width;
+            leftCanvas.height = picbreederCanvas.height;
+            const leftCtx = leftCanvas.getContext('2d');
+            leftCtx.drawImage(picbreederCanvas, 0, 0);
+            
+            leftPanel.appendChild(leftTitle);
+            leftPanel.appendChild(leftCanvas);
+            
+            // Create right panel (SGD)
+            const rightPanel = document.createElement('div');
+            rightPanel.className = 'split-panel';
+            
+            const rightTitle = document.createElement('h3');
+            rightTitle.textContent = 'SGD (FER)';
+            rightTitle.style.background = 'linear-gradient(45deg, #ef4444, #f59e0b)';
+            rightTitle.style.webkitBackgroundClip = 'text';
+            rightTitle.style.webkitTextFillColor = 'transparent';
+            
+            const rightCanvas = document.createElement('canvas');
+            rightCanvas.width = sgdCanvas.width;
+            rightCanvas.height = sgdCanvas.height;
+            const rightCtx = rightCanvas.getContext('2d');
+            rightCtx.drawImage(sgdCanvas, 0, 0);
+            
+            rightPanel.appendChild(rightTitle);
+            rightPanel.appendChild(rightCanvas);
+            
+            // Store references for animation
+            fullscreenCanvases.split = {
+                picbreeder: {
+                    canvas: leftCanvas,
+                    ctx: leftCtx
+                },
+                sgd: {
+                    canvas: rightCanvas,
+                    ctx: rightCtx
+                }
+            };
+            
+            // Create close button
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'fullscreen-close';
+            closeBtn.innerHTML = '×';
+            closeBtn.onclick = exitFullscreen;
+            closeBtn.style.position = 'absolute';
+            closeBtn.style.top = '20px';
+            closeBtn.style.right = '20px';
+            closeBtn.style.zIndex = '1001';
+            
+            splitDiv.appendChild(leftPanel);
+            splitDiv.appendChild(rightPanel);
+            splitDiv.appendChild(closeBtn);
+            
+            document.body.appendChild(splitDiv);
+            
+            // Add escape key listener
+            document.addEventListener('keydown', onFullscreenKeydown);
+            
+            console.log('Entered split fullscreen mode');
+        }
+
+        function exitFullscreen() {
+            const fullscreenContainer = document.getElementById('fullscreen-container');
+            const splitContainer = document.getElementById('split-fullscreen-container');
+            
+            if (fullscreenContainer) {
+                fullscreenContainer.remove();
+            }
+            
+            if (splitContainer) {
+                splitContainer.remove();
+            }
+            
+            // Clear fullscreen canvas references
+            fullscreenCanvases.single = null;
+            fullscreenCanvases.split = { picbreeder: null, sgd: null };
+            
+            // Remove escape key listener
+            document.removeEventListener('keydown', onFullscreenKeydown);
+            
+            console.log('Exited fullscreen mode');
+        }
+
+        function onFullscreenKeydown(e) {
+            if (e.code === 'Escape') {
+                e.preventDefault();
+                exitFullscreen();
+            }
+        }
+
+        // Update progress bar functions
+        function showProgress(show) {
+            const picbreederProgress = document.getElementById('picbreeder-progress');
+            const sgdProgress = document.getElementById('sgd-progress');
+            
+            if (show) {
+                picbreederProgress.style.display = 'block';
+                sgdProgress.style.display = 'block';
+            } else {
+                picbreederProgress.style.display = 'none';
+                sgdProgress.style.display = 'none';
+            }
+        }
+
+        function updateProgress(percentage, text) {
+            const picbreederFill = document.getElementById('picbreeder-progress-fill');
+            const sgdFill = document.getElementById('sgd-progress-fill');
+            const picbreederText = document.getElementById('picbreeder-progress-text');
+            const sgdText = document.getElementById('sgd-progress-text');
+            
+            if (picbreederFill && sgdFill && picbreederText && sgdText) {
+                picbreederFill.style.width = `${percentage}%`;
+                sgdFill.style.width = `${percentage}%`;
+                picbreederText.textContent = text;
+                sgdText.textContent = text;
+            }
+        }
+
+        // Initialize app when page loads
+        document.addEventListener('DOMContentLoaded', async () => {
+            await init();
+        });
+    </script>
+</body>
+</html> 
