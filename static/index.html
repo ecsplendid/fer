@@ -251,8 +251,11 @@
         .fullscreen-content canvas {
             max-width: 100%;
             max-height: 100%;
+            width: auto;
+            height: auto;
             border-radius: 10px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            object-fit: contain;
         }
 
         .fullscreen-close {
@@ -310,8 +313,11 @@
         .split-panel canvas {
             max-width: 100%;
             max-height: calc(100vh - 100px);
+            width: auto;
+            height: auto;
             border-radius: 10px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            object-fit: contain;
         }
 
         .sliders-container {
@@ -621,6 +627,61 @@
 
         .feature-map:hover .feature-tooltip {
             opacity: 1;
+        }
+
+        /* Feature map fullscreen styles */
+        .feature-fullscreen-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .feature-fullscreen-content {
+            width: 90vw;
+            height: 90vh;
+            max-width: 90vw;
+            max-height: 90vh;
+            position: relative;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feature-fullscreen-content h2 {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            margin: 0;
+            font-size: 1.5rem;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+        }
+
+        .feature-fullscreen-content img {
+            flex: 1;
+            width: 100%;
+            max-width: 90vw;
+            max-height: calc(90vh - 100px);
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            object-fit: contain;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: pixelated;
         }
 
         .animation-controls {
@@ -978,11 +1039,12 @@
             <h4>🎯 How to Use</h4>
             <p><strong>1. Load Feature Maps:</strong> Click "Load Features" to see the internal representations</p>
             <p><strong>2. Add Sliders:</strong> Click on any feature map to add a weight slider for that neuron</p>
-            <p><strong>3. Select Weight:</strong> Click on a weight slider box to select it (green border indicates selection)</p>
-            <p><strong>4. Set Keyframes:</strong> With weight selected, press <span class="key">I</span> for IN point, <span class="key">O</span> for OUT point</p>
-            <p><strong>5. Animate:</strong> Press <span class="key">Space</span> to start/restart animation or <span class="key">R</span> for bounce loop mode</p>
-            <p><strong>6. Fullscreen:</strong> Click <span class="key">⛶</span> on images for fullscreen, or <span class="key">🔲 Split View</span> for side-by-side comparison</p>
-            <p><strong>7. Visual Indicators:</strong> Blue left border = some keyframes, Green left border = both keyframes set</p>
+            <p><strong>3. View High-Res:</strong> Double-click on any feature map to view it fullscreen at 500x500 resolution</p>
+            <p><strong>4. Select Weight:</strong> Click on a weight slider box to select it (green border indicates selection)</p>
+            <p><strong>5. Set Keyframes:</strong> With weight selected, press <span class="key">I</span> for IN point, <span class="key">O</span> for OUT point</p>
+            <p><strong>6. Animate:</strong> Press <span class="key">Space</span> to start/restart animation or <span class="key">R</span> for bounce loop mode</p>
+            <p><strong>7. Fullscreen:</strong> Click <span class="key">⛶</span> on images for fullscreen, or <span class="key">🔲 Split View</span> for side-by-side comparison</p>
+            <p><strong>8. Visual Indicators:</strong> Blue left border = some keyframes, Green left border = both keyframes set</p>
             <p><strong>Note:</strong> Animations work in fullscreen mode too! Bounce mode loops forward and backward continuously. Press <span class="key">Esc</span> to exit fullscreen.</p>
         </div>
     </div>
@@ -1336,6 +1398,11 @@
                     
                     featureDiv.addEventListener('click', () => {
                         toggleFeatureSelection(modelType, feature.weight_id, featureDiv);
+                    });
+                    
+                    featureDiv.addEventListener('dblclick', (e) => {
+                        e.stopPropagation();
+                        enterFeatureFullscreen(modelType, feature.weight_id, feature.image);
                     });
                     
                     featuresGrid.appendChild(featureDiv);
@@ -2209,6 +2276,114 @@
             if (e.code === 'Escape') {
                 e.preventDefault();
                 exitFullscreen();
+                exitFeatureFullscreen();
+            }
+        }
+
+        // Feature map fullscreen functions
+        async function enterFeatureFullscreen(modelType, weightId, lowResImage) {
+            try {
+                // Create fullscreen container
+                const fullscreenDiv = document.createElement('div');
+                fullscreenDiv.className = 'feature-fullscreen-container';
+                fullscreenDiv.id = 'feature-fullscreen-container';
+                
+                // Create content wrapper
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'feature-fullscreen-content';
+                
+                // Add title
+                const title = document.createElement('h2');
+                title.textContent = `${modelType === 'picbreeder' ? 'Picbreeder' : 'SGD'} - Weight ${weightId} Feature Map`;
+                
+                // Add loading indicator
+                const loadingDiv = document.createElement('div');
+                loadingDiv.className = 'loading';
+                loadingDiv.style.display = 'block';
+                
+                // Create image element
+                const img = document.createElement('img');
+                img.style.display = 'none'; // Hide until loaded
+                
+                contentDiv.appendChild(title);
+                contentDiv.appendChild(loadingDiv);
+                contentDiv.appendChild(img);
+                
+                // Create close button
+                const closeBtn = document.createElement('button');
+                closeBtn.className = 'fullscreen-close';
+                closeBtn.innerHTML = '×';
+                closeBtn.onclick = exitFeatureFullscreen;
+                
+                fullscreenDiv.appendChild(contentDiv);
+                fullscreenDiv.appendChild(closeBtn);
+                document.body.appendChild(fullscreenDiv);
+                
+                // Add escape key listener
+                document.addEventListener('keydown', onFullscreenKeydown);
+                
+                // Load high-resolution feature map
+                const modelKey = `${modelType}_${currentModel}`;
+                const response = await fetch(`/api/feature_map_hires/${modelKey}/${weightId}?img_size=500`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    img.src = data.image;
+                    img.onload = () => {
+                        loadingDiv.style.display = 'none';
+                        img.style.display = 'block';
+                    };
+                } else {
+                    // Fallback to low-res image
+                    img.src = lowResImage;
+                    img.onload = () => {
+                        loadingDiv.style.display = 'none';
+                        img.style.display = 'block';
+                    };
+                }
+                
+            } catch (error) {
+                console.error('Error entering feature fullscreen:', error);
+                // Fallback to low-res image
+                showFeatureFullscreenFallback(modelType, weightId, lowResImage);
+            }
+        }
+
+        function showFeatureFullscreenFallback(modelType, weightId, image) {
+            const fullscreenDiv = document.createElement('div');
+            fullscreenDiv.className = 'feature-fullscreen-container';
+            fullscreenDiv.id = 'feature-fullscreen-container';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'feature-fullscreen-content';
+            
+            const title = document.createElement('h2');
+            title.textContent = `${modelType === 'picbreeder' ? 'Picbreeder' : 'SGD'} - Weight ${weightId} Feature Map`;
+            
+            const img = document.createElement('img');
+            img.src = image;
+            
+            contentDiv.appendChild(title);
+            contentDiv.appendChild(img);
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'fullscreen-close';
+            closeBtn.innerHTML = '×';
+            closeBtn.onclick = exitFeatureFullscreen;
+            
+            fullscreenDiv.appendChild(contentDiv);
+            fullscreenDiv.appendChild(closeBtn);
+            document.body.appendChild(fullscreenDiv);
+            
+            document.addEventListener('keydown', onFullscreenKeydown);
+        }
+
+        function exitFeatureFullscreen() {
+            const featureFullscreenContainer = document.getElementById('feature-fullscreen-container');
+            if (featureFullscreenContainer) {
+                featureFullscreenContainer.remove();
+                document.removeEventListener('keydown', onFullscreenKeydown);
+                console.log('Exited feature fullscreen mode');
             }
         }
 

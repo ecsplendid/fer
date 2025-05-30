@@ -447,6 +447,51 @@ async def weight_sweep(model_key: str, weight_id: int, steps: int = 20, range_va
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+@app.get("/api/feature_map_hires/{model_key}/{weight_id}")
+async def get_feature_map_hires(model_key: str, weight_id: int, img_size: int = 500):
+    """Get a high-resolution version of a specific feature map"""
+    try:
+        if model_key not in cppn_manager.models:
+            raise HTTPException(status_code=404, detail=f"Model {model_key} not found")
+        
+        # Generate feature maps at high resolution
+        features, weight_mapping = cppn_manager.generate_feature_maps(model_key, img_size)
+        
+        # Find the feature map corresponding to the weight_id
+        target_feature_map = None
+        
+        for layer_idx, layer_features in enumerate(features):
+            num_neurons = layer_features.shape[-1]
+            
+            for neuron_idx in range(num_neurons):
+                mapping_key = f"layer_{layer_idx}_neuron_{neuron_idx}"
+                mapped_weight_id = weight_mapping.get(mapping_key, {}).get("primary_weight", 0)
+                
+                if mapped_weight_id == weight_id:
+                    target_feature_map = layer_features[:, :, neuron_idx]
+                    break
+            
+            if target_feature_map is not None:
+                break
+        
+        if target_feature_map is None:
+            # Fallback: if we can't find the exact weight mapping, 
+            # try to find a reasonable feature map or generate one
+            raise HTTPException(status_code=404, detail=f"Feature map for weight {weight_id} not found")
+        
+        # Convert to high-res base64 image
+        feature_img = feature_map_to_base64(target_feature_map)
+        
+        return {
+            "image": feature_img,
+            "weight_id": weight_id,
+            "model_key": model_key,
+            "resolution": img_size
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
