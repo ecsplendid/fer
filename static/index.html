@@ -1905,7 +1905,7 @@
                     const progress = (processedFrames / frameCount) * 100;
                     updateProgress(progress, `Generating batch ${currentBatch}/${totalBatches} (${processedFrames + 1}-${batchEnd} of ${frameCount})`);
                     
-                    console.log(`Generating batch ${currentBatch}/${totalBatches}: frames ${batchStart + 1}-${batchEnd}`);
+                    // console.log(`Generating batch ${currentBatch}/${totalBatches}: frames ${batchStart + 1}-${batchEnd}`);
                     
                     // Send batch request
                     const response = await fetch(`/api/generate_batch/${currentModel}`, {
@@ -1935,8 +1935,9 @@
                     const finalProgress = (processedFrames / frameCount) * 100;
                     updateProgress(finalProgress, `Completed batch ${currentBatch}/${totalBatches}`);
                     
-                    console.log(`Completed batch: ${processedFrames}/${frameCount} frames generated`);
-                }
+                    // console.log(`Completed batch: ${processedFrames}/${frameCount} frames generated`);
+                    
+                    }
                 
                 updateProgress(100, 'Animation ready!');
                 setTimeout(() => showProgress(false), 1000);
@@ -1978,7 +1979,7 @@
                     return;
                 }
                 
-                console.log(`Playing frame ${currentFrame + 1}/${frameCount} (${animationMode} mode)`);
+                // console.log(`Playing frame ${currentFrame + 1}/${frameCount} (${animationMode} mode)`);
                 
                 // Draw current frame on both canvases
                 drawImageOnCanvas('picbreeder', animationFrames.picbreeder[currentFrame]);

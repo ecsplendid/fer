@@ -1,176 +1,198 @@
-<h1 align="center">
-  <a href="https://arxiv.org/abs/2505.11581">
-    <img width="600" alt="Teaser Figure" src="assets/pngs/teaser.png"></a><br>
-</h1>
+# FER CPPN Explorer: Interactive Visualization of Fractured vs Unified Neural Representations
 
-<h1 align="center">
-The Fractured Entangled Representation Hypothesis
-</h1>
-<p align="center">
-  📝<a href="https://arxiv.org/abs/2505.11581">Paper PDF</a>
-</p>
-<p align="center">
-<a href="https://colab.research.google.com/github/akarshkumar0101/fer/blob/master/src/fer.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
-</p>
+**Date:** May 30th, 2025  
+**Developed by:** Dr. Tim Scarfe, Machine Learning Street Talk (MLST)  
+**Original Research:** "Questioning Representational Optimism in Deep Learning: The Fractured Entangled Representation Hypothesis" by Kumar et al. (2025)
 
-<div align="center" style="line-height: 1.4;">
-  <p style="font-size: 1.1em; margin: 0;">
-    <a href="https://x.com/akarshkumar0101">Akarsh Kumar</a><sup>1</sup>,
-    <a href="https://x.com/jeffclune">Jeff Clune</a><sup>2,3</sup>,
-    <a href="https://x.com/joelbot3000">Joel Lehman</a><sup>4</sup>,
-    <a href="https://x.com/kenneth0stanley">Kenneth O. Stanley</a><sup>5</sup>
-    <br/>
-    <span style="font-size: 0.95em;">
-      <sup>1</sup>MIT, <sup>2</sup>University of British Columbia, <sup>3</sup>Vector Institute, 
-      <sup>4</sup>University of Oxford, <sup>5</sup>Lila Sciences
-    </span>
-  </p>
-</div>
+## 🎯 Overview
 
-<!-- [Akarsh Kumar](https://x.com/akarshkumar0101) $^{1}$, [Jeff Clune](https://x.com/jeffclune)  $^2$ $^{3}$, [Joel Lehman](https://x.com/joelbot3000) $^{4}$, [Kenneth O. Stanley](https://x.com/kenneth0stanley) $^5$
-<br>
-$^1$ MIT, $^2$ University of British Columbia, $^3$ Vector Institute, $^4$ University of Oxford, $^5$ Lila Sciences -->
+This interactive web application allows researchers and enthusiasts to explore a fundamental question in deep learning: **Do neural networks trained with SGD develop good internal representations, or do they just memorize solutions through fractured, entangled pathways?**
 
-## Abstract
-Much of the excitement in modern AI is driven by the observation that scaling up existing systems leads to better performance.
-But does better performance necessarily imply better internal representations?
-While the representational optimist assumes it must, this position paper challenges that view.
-We compare neural networks evolved through an open-ended search process to networks trained via conventional stochastic gradient descent (SGD) on the simple task of generating a single image.
-This minimal setup offers a unique advantage: each hidden neuron's full functional behavior can be easily visualized as an image, thus revealing how the network's output behavior is internally constructed neuron by neuron.
-The result is striking: while both networks produce the same output behavior, their internal representations differ dramatically.
-The SGD-trained networks exhibit a form of disorganization that we term *fractured entangled representation* (FER).
-Interestingly, the evolved networks largely lack FER, even approaching a *unified factored representation* (UFR).
-In large models, FER may be degrading core model capacities like generalization, creativity, and (continual) learning.
-Therefore, understanding and mitigating FER could be critical to the future of representation learning.
+The **Fractured Entangled Representation (FER) Hypothesis** suggests that conventional SGD training often produces networks that achieve perfect performance while harboring deeply flawed internal representations. In contrast, **Unified Factored Representations (UFR)** demonstrate clean, modular, and reusable internal structures.
 
-## More Data and Visualizations
+## 🎬 Interactive Demo
 
-<div style="text-align: center;">
-  <img src="./assets/pngs/fmaps_576_pb.png" alt="fmaps_576_pb.png" width="400"/>
-  <img src="./assets/pngs/fmaps_576_sgd_pb.png" alt="fmaps_576_sgd_pb.png" width="400"/>
-  <br>
-  <img src="./assets/pngs/butterfly_sweeps_teaser.png" alt="butterfly_sweeps_teaser.png" width="400"/>
-  <img src="./assets/pngs/apple_sweeps_teaser.png" alt="apple_sweeps_teaser.png" width="400"/>
-</div>
+![FER CPPN Explorer Interface](UI.png)
 
+**🎥 [Watch Demo Video](https://f.io/Fto-Gtt5)** - See the interactive visualization in action!
 
-Here is the all of the supplementary data from the paper.
+## 🧠 The Core Hypothesis
 
-### Intermediate Feature Maps:
-- Skull:
-  - [Picbreeder Skull](./assets/fmaps_576_pb.pdf)
-  - [SGD Skull](./assets/fmaps_576_sgd_pb.pdf)
-  - [SGD (ReLU) Skull](./assets/fmaps_576_sgd_relu.pdf)
-  - [SGD Skull (PCA Transformed)](./assets/fmaps_576_sgd_pb_pca.pdf)
-- Butterfly:
-  - [Picbreeder Butterfly](./assets/fmaps_4376_pb.pdf)
-  - [SGD Butterfly](./assets/fmaps_4376_sgd_pb.pdf)
-  - [SGD (ReLU) Butterfly](./assets/fmaps_4376_sgd_relu.pdf)
-- Apple:
-  - [Picbreeder Apple](./assets/fmaps_5736_pb.pdf)
-  - [SGD Apple](./assets/fmaps_5736_sgd_pb.pdf)
-  - [SGD (ReLU) Apple](./assets/fmaps_5736_sgd_relu.pdf)
+### Fractured Entangled Representation (FER)
+- **Fractured**: Information for the same concept is split into disconnected pieces
+- **Entangled**: Behaviors that should be independent inappropriately influence each other
+- **Result**: Networks that work but can't generalize, create, or learn efficiently
 
+### Unified Factored Representation (UFR)  
+- **Unified**: Single, coherent representation for each concept
+- **Factored**: Independent capabilities remain separated and modular
+- **Result**: Networks that understand underlying regularities and can build upon them
 
-### All Weight Sweeps:
-- Skull:
-  - [Picbreeder Skull](./assets/weight_sweeps_all_576_pb.pdf)
-  - [SGD Skull](./assets/weight_sweeps_all_576_sgd_pb.pdf)
-  - [SGD (ReLU) Skull](./assets/weight_sweeps_all_576_sgd_relu.pdf)
-  - [Picbreeder Skull (Randomized Directions)](./assets/weight_sweeps_all_576_pb_random.pdf)
-  - [SGD Skull (Randomized Directions)](./assets/weight_sweeps_all_576_sgd_pb_random.pdf)
-- Butterfly:
-  - [Picbreeder Butterfly](./assets/weight_sweeps_all_4376_pb.pdf)
-  - [SGD Butterfly](./assets/weight_sweeps_all_4376_sgd_pb.pdf)
-  - [SGD (ReLU) Butterfly](./assets/weight_sweeps_all_4376_sgd_relu.pdf)
-- Apple
-  - [Picbreeder Apple](./assets/weight_sweeps_all_5736_pb.pdf)
-  - [SGD Apple](./assets/weight_sweeps_all_5736_sgd_pb.pdf)
-  - [SGD (ReLU) Apple](./assets/weight_sweeps_all_5736_sgd_relu.pdf)
+## 🔬 Research Context
 
-### Select Weight Sweeps From the Paper:
-- Skull:
-  - [Picbreeder Skull](./assets/weight_sweeps_576_pb.pdf)
-  - [SGD Skull](./assets/weight_sweeps_576_sgd_pb.pdf)
-  - [Picbreeder Skull (Randomized Directions)](./assets/weight_sweeps_576_pb_random.pdf)
-  - [SGD Skull (Randomized Directions)](./assets/weight_sweeps_576_sgd_pb_random.pdf)
-- Butterfly:
-  - [Picbreeder Butterfly](./assets/weight_sweeps_4376_pb.pdf)
-  - [SGD Butterfly](./assets/weight_sweeps_4376_sgd_pb.pdf)
-- Apple
-  - [Picbreeder Apple](./assets/weight_sweeps_5736_pb.pdf)
-  - [SGD Apple](./assets/weight_sweeps_5736_sgd_pb.pdf)
+The original paper compares:
+- **Picbreeder Networks**: Evolved through open-ended human-guided search, exhibiting UFR
+- **SGD Networks**: Trained via conventional gradient descent to match Picbreeder outputs, exhibiting FER
 
+Both networks produce **identical output behavior** but have **radically different internal representations**. This challenges the assumption that good performance implies good representation—what the authors call "representational optimism."
 
-### Other Assets
-All other important assets from the paper can be found in [./assets/](./assets/).
+## 🚀 Interactive Features
 
+### Real-Time Visualization
+- **Side-by-side comparison** of Picbreeder (UFR) vs SGD (FER) networks
+- **Feature map exploration** showing internal representations layer by layer
+- **Dynamic weight manipulation** with immediate visual feedback
 
-## Code
-This repo contains code to:
-- Load the picbreeder genomes from the paper
-- Layerize it into a MLP format
-- Train a SGD network to mimic that output
-- Visualize the internal representation
-- Do weight sweeps and visualize the result
+### Animation System
+- **Keyframe-based animation** to visualize weight sweeps and representation changes
+- **Per-weight keyframes**: Set individual IN/OUT points for different network weights
+- **Smooth interpolation** with multiple easing functions
+- **Batch processing**: Efficient generation of 60+ frame animations
 
+### Advanced Interaction Modes
+- **Fullscreen visualization** for detailed inspection
+- **Split-screen fullscreen** for direct UFR vs FER comparison
+- **Bounce loop animations** for continuous exploration
+- **Progress tracking** with real-time generation status
 
-### Google Colab
-For a quick start, open [src/fer.ipynb](src/fer.ipynb) in Google Colab: 
+### Visual Indicators
+- **Keyframe markers** showing IN/OUT points on sliders
+- **Color-coded borders** indicating keyframe status
+- **Weight value displays** with precise numerical feedback
 
-<a href="https://colab.research.google.com/github/akarshkumar0101/fer/blob/master/src/fer.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
+## 🛠 Technical Implementation
 
-### Running Locally
-To run this project locally, you can start by cloning this repo.
-```sh
-git clone https://github.com/akarshkumar0101/fer
-```
-Then, set up the python environment with conda:
-```sh
-conda create --name=fer python=3.10.16 --yes
-conda activate fer
+### Backend (Python/FastAPI)
+```python
+# Core Technologies
+- FastAPI: RESTful API server
+- PyTorch: Neural network inference
+- Pillow: Image processing and generation
+- NumPy: Numerical computations
 ```
 
-Now you can install these libraries.
-The versioning needs to be very specific for the following.
-However, if you don't need to train the SGD network to play around with the results; in that case you can simply install the cpu version of jax following [official guide](https://github.com/jax-ml/jax?tab=readme-ov-file#installation).
-```sh
-python -m pip install jax==0.4.28 jaxlib==0.4.28+cuda12.cudnn89 -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html --no-cache-dir
-python -m pip install flax==0.10.2 evosax==0.1.6 orbax-checkpoint==0.11.0 optax==0.2.4 --no-deps
+**Key Endpoints:**
+- `/api/models` - Model metadata and weight suggestions
+- `/api/generate_comparison/{model}` - Single frame generation
+- `/api/generate_batch/{model}` - Batch frame generation for animations
+- `/api/feature_maps/{model}` - Internal representation visualization
+
+**Architecture:**
+- **ParameterReshaper**: Manages weight manipulation and optimization
+- **Batch Processing**: Handles multiple frame generation efficiently
+- **Model Loading**: Supports both Picbreeder and SGD variants
+
+### Frontend (HTML/CSS/JavaScript)
+```javascript
+// Core Features
+- Canvas-based rendering for real-time image updates
+- Dynamic slider generation for weight manipulation
+- Keyframe animation system with easing functions
+- Fullscreen modes with animation support
+- Progress bars with batch generation feedback
 ```
 
-Then, install all the other necessary python libraries:
-```sh
-python -m pip install -r requirements.txt
-```
+**Key Components:**
+- **Animation Engine**: Frame interpolation and playback control
+- **Keyframe System**: Per-weight animation with visual feedback
+- **Canvas Management**: Dual rendering for UFR/FER comparison
+- **Feature Map Viewer**: Interactive exploration of internal representations
 
-Now you can run through the notebook [src/fer.ipynb](src/fer.ipynb) that quickly covers everything you need.
-However, here are some additional details on the file structure:
-- [./assets](./assets/) contains the additional data and all assets from the paper
-- [./picbreeder_genomes/](./picbreeder_genomes/) contains the raw picbreeder genomes for the skull, butterfly, and apple
-- [./data/](./data/) contains the data for the layerized picbreeder CPPN and the SGD CPPN, we have already precomputed this directory for you
-- [./src/](./src/) contains the code
-    - [./src/color.py](./src/color.py) is code to convert hsv to rgb
-    - [./src/cppn.py](./src/cppn.py) the flax CPPN code to model MLPs with arbitrary activation functions at different neurons
-    - [./src/process_pb.py](./src/process_pb.py) processes the picbreeder genome to create layerized CPPNs
-    - [./src/train_sgd.py](./src/train_sgd.py) trains an SGD CPPN with a specified architecture on a target image
-    - [./src/util.py](./src/util.py) and [./src/picbreeder_util.py](./src/picbreeder_util.py) contain some utility functions
+### Performance Optimizations
+- **Batched API Calls**: Generate multiple frames per request (default: 20 frames/batch)
+- **Efficient Rendering**: Canvas-based updates with minimal redraws
+- **Smooth Animations**: 60fps playback with configurable duration
+- **Memory Management**: Proper cleanup of animation frames and resources
 
+## 📊 Models Included
 
-### Contact
-Please contact us at akarshkumar0101@gmail.com if you would like access to more Picbreeder genomes for research.
+### Apple Model (46,474 parameters)
+- Complex organic shape with stem and background
+- Demonstrates color, form, and structure representation
+- Clear difference between UFR factorization vs FER entanglement
 
-<div style="text-align: center;">
-  <img src="./assets/pngs/pb_imgs.png" alt="fmaps_576_pb.png" width="800"/>
-</div>
+### Skull Model (5,478 parameters)  
+- Symmetric structure ideal for testing regularity representation
+- UFR preserves bilateral symmetry, FER treats sides independently
+- Showcases anatomical feature decomposition
 
-## Bibtex Citation
-To cite our work, use the following:
-```
+### Butterfly Model (8,096 parameters)
+- Intricate symmetric patterns with natural regularities
+- Highlights difference in wing pattern representation
+- Demonstrates UFR's superior handling of biological symmetries
+
+## 🎮 Usage Instructions
+
+### Getting Started
+1. **Install Dependencies**: `pip install -r requirements.txt`
+2. **Launch Server**: `python app.py`
+3. **Open Browser**: Navigate to `http://localhost:8000`
+
+### Basic Exploration
+1. **Select Model**: Choose Apple, Skull, or Butterfly
+2. **Load Feature Maps**: Click "Load Features" to see internal representations
+3. **Add Sliders**: Click feature maps to add weight manipulation controls
+4. **Explore Differences**: Compare how UFR vs FER represents the same concepts
+
+### Animation Workflow
+1. **Select Weight**: Click on a slider to select it (green border)
+2. **Set Keyframes**: Press `I` for IN point, `O` for OUT point
+3. **Animate**: Press `Space` for normal animation, `R` for bounce loop
+4. **Fullscreen**: Click `⛶` for single view or `🔲` for split comparison
+
+### Advanced Features
+- **Multiple Weights**: Set keyframes on multiple weights simultaneously
+- **Custom Easing**: Choose from linear, cubic, quadratic interpolation
+- **Batch Size**: Adjust frames per request (1-60) for performance tuning
+- **Export**: Screenshots available in fullscreen mode
+
+## 🔍 Key Insights Revealed
+
+### Weight Sweep Behavior
+- **UFR (Picbreeder)**: Smooth, meaningful changes preserving regularities
+- **FER (SGD)**: Chaotic distortions breaking fundamental patterns
+
+### Symmetry Representation
+- **UFR**: Bilateral symmetry emerges early and persists
+- **FER**: Left/right sides encoded separately, symmetry accidental
+
+### Feature Factorization
+- **UFR**: Clean separation of semantic components (stem, body, background)
+- **FER**: Entangled representations mixing unrelated features
+
+## 📈 Research Implications
+
+This visualization tool demonstrates that:
+1. **Performance ≠ Understanding**: Perfect output doesn't guarantee good representation
+2. **Training Matters**: How you learn affects what you learn
+3. **Representation Quality**: UFR enables better generalization, creativity, and learning
+4. **Open-Ended Search**: Alternative to SGD may produce superior representations
+
+## 🤝 Contributing
+
+This fork extends the original research with interactive visualization capabilities. Contributions welcome for:
+- Additional model architectures
+- New visualization techniques  
+- Performance optimizations
+- Educational features
+
+## 📜 Citation
+
+```bibtex
 @article{kumar2025fractured,
-  title = {Questioning Representational Optimism in Deep Learning: The Fractured Entangled Representation Hypothesis},
-  author = {Akarsh Kumar and Jeff Clune and Joel Lehman and Kenneth O. Stanley},
-  year = {2025},
-  url = {https://arxiv.org/abs/2505.11581}
+  title={Questioning Representational Optimism in Deep Learning: The Fractured Entangled Representation Hypothesis},
+  author={Kumar, Akarsh and Clune, Jeff and Lehman, Joel and Stanley, Kenneth O.},
+  journal={arXiv preprint arXiv:2505.11581},
+  year={2025}
 }
 ```
+
+## 🔗 Links
+
+- **Original Paper**: [arXiv:2505.11581](https://arxiv.org/abs/2505.11581)
+- **Machine Learning Street Talk**: [YouTube Channel](https://www.youtube.com/@MachineLearningStreetTalk)
+- **Interactive Demo**: [Live Application](http://localhost:8000)
+
+---
+
+**Built with ❤️ for the ML research community to explore the hidden world of neural representations**
