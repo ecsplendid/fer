@@ -218,6 +218,13 @@ class WeightUpdate(BaseModel):
     weight_deltas: Dict[int, float]
     img_size: Optional[int] = 256
 
+class ComparisonWeightUpdate(BaseModel):
+    picbreeder_deltas: Optional[Dict[int, float]] = {}
+    sgd_deltas: Optional[Dict[int, float]] = {}
+    # Backward compatibility
+    weight_deltas: Optional[Dict[int, float]] = {}
+    img_size: Optional[int] = 256
+
 class SliderConfig(BaseModel):
     weight_id: int
     description: Optional[str] = None
@@ -302,7 +309,7 @@ async def generate_image(model_key: str, weight_update: WeightUpdate):
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/api/generate_comparison/{genome}")
-async def generate_comparison(genome: str, weight_update: WeightUpdate):
+async def generate_comparison(genome: str, weight_update: ComparisonWeightUpdate):
     """Generate side-by-side comparison of Picbreeder vs SGD"""
     try:
         picbreeder_key = f"picbreeder_{genome}"
@@ -311,15 +318,25 @@ async def generate_comparison(genome: str, weight_update: WeightUpdate):
         if picbreeder_key not in cppn_manager.models or sgd_key not in cppn_manager.models:
             raise HTTPException(status_code=404, detail=f"Models for {genome} not found")
         
-        # Generate both images
+        # Handle both new and old API formats
+        if weight_update.picbreeder_deltas or weight_update.sgd_deltas:
+            # New format with separate deltas
+            picbreeder_deltas = weight_update.picbreeder_deltas
+            sgd_deltas = weight_update.sgd_deltas
+        else:
+            # Backward compatibility - use old format
+            picbreeder_deltas = weight_update.weight_deltas
+            sgd_deltas = weight_update.weight_deltas
+        
+        # Generate both images with separate weight deltas
         picbreeder_img = cppn_manager.generate_image(
             picbreeder_key, 
-            weight_update.weight_deltas, 
+            picbreeder_deltas, 
             weight_update.img_size
         )
         sgd_img = cppn_manager.generate_image(
             sgd_key, 
-            weight_update.weight_deltas, 
+            sgd_deltas, 
             weight_update.img_size
         )
         
@@ -442,6 +459,54 @@ async def weight_sweep(model_key: str, weight_id: int, steps: int = 20, range_va
             "images": images,
             "weight_values": weight_values.tolist(),
             "weight_id": weight_id
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.get("/api/feature_maps_hires/{model_key}")
+async def get_feature_maps_hires(model_key: str, img_size: int = 200):
+    """Get high-resolution feature maps for a specific model"""
+    try:
+        if model_key not in cppn_manager.models:
+            raise HTTPException(status_code=404, detail=f"Model {model_key} not found")
+        
+        features, weight_mapping = cppn_manager.generate_feature_maps(model_key, img_size)
+        
+        # Convert feature maps to base64 images
+        feature_maps_data = []
+        
+        for layer_idx, layer_features in enumerate(features):
+            layer_data = {
+                "layer": layer_idx,
+                "features": []
+            }
+            
+            # layer_features has shape (H, W, num_neurons)
+            num_neurons = layer_features.shape[-1]
+            
+            for neuron_idx in range(num_neurons):
+                feature_map = layer_features[:, :, neuron_idx]
+                feature_img = feature_map_to_base64(feature_map)
+                
+                # Get the corresponding weight ID for this neuron
+                mapping_key = f"layer_{layer_idx}_neuron_{neuron_idx}"
+                weight_id = weight_mapping.get(mapping_key, {}).get("primary_weight", 0)
+                
+                layer_data["features"].append({
+                    "neuron": neuron_idx,
+                    "weight_id": weight_id,
+                    "image": feature_img,
+                    "mapping_key": mapping_key
+                })
+            
+            feature_maps_data.append(layer_data)
+        
+        return {
+            "model_key": model_key,
+            "feature_maps": feature_maps_data,
+            "weight_mapping": weight_mapping,
+            "resolution": img_size
         }
         
     except Exception as e:

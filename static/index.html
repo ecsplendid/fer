@@ -244,18 +244,16 @@
         }
 
         .fullscreen-content {
-            max-width: 90vw;
-            max-height: 90vh;
+            width: 100vw;
+            height: 100vh;
             position: relative;
         }
 
         .fullscreen-content canvas {
-            max-width: 100%;
-            max-height: 100%;
-            width: auto;
-            height: auto;
-            border-radius: 10px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            width: 100vw;
+            height: 100vh;
+            border-radius: 0;
+            box-shadow: none;
             object-fit: contain;
         }
 
@@ -312,12 +310,10 @@
         }
 
         .split-panel canvas {
-            max-width: 100%;
-            max-height: calc(100vh - 100px);
-            width: auto;
-            height: auto;
-            border-radius: 10px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            height: calc(100vh - 40px);
+            border-radius: 0;
+            box-shadow: none;
             object-fit: contain;
         }
 
@@ -350,16 +346,8 @@
             box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
         }
 
-        .slider-group.has-keyframes {
-            border-left: 4px solid #6366f1;
-        }
 
-        .slider-group.has-keyframes.has-both-keyframes {
-            border-left: 4px solid #10b981;
-        }
-
-        .keyframe-indicators-slider {
-            display: none;
+        .slider-info {
             margin-top: 8px;
             padding: 8px;
             background: rgba(20, 20, 20, 0.8);
@@ -367,16 +355,24 @@
             border: 1px solid rgba(99, 102, 241, 0.3);
         }
 
-        .keyframe-indicators-slider.visible {
-            display: block;
-        }
-
-        .keyframe-value-row {
+        .slider-range-info {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin: 3px 0;
             font-size: 0.8rem;
+        }
+
+        .range-label {
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .range-value {
+            color: #6366f1;
+            font-weight: 600;
+            background: rgba(99, 102, 241, 0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
         }
 
         .keyframe-label {
@@ -452,31 +448,6 @@
             margin-bottom: 8px;
         }
 
-        .keyframe-bar {
-            position: absolute;
-            top: -2px;
-            width: 2px;
-            height: 10px;
-            border-radius: 1px;
-            opacity: 0;
-            transition: all 0.3s ease;
-            z-index: 2;
-            pointer-events: none;
-        }
-
-        .keyframe-bar.in-bar {
-            background: linear-gradient(180deg, #10b981, #059669);
-            box-shadow: 0 0 4px rgba(16, 185, 129, 0.6);
-        }
-
-        .keyframe-bar.out-bar {
-            background: linear-gradient(180deg, #3b82f6, #2563eb);
-            box-shadow: 0 0 4px rgba(59, 130, 246, 0.6);
-        }
-
-        .keyframe-bar.visible {
-            opacity: 1;
-        }
 
         .slider::-webkit-slider-thumb {
             -webkit-appearance: none;
@@ -519,6 +490,12 @@
             margin-bottom: 15px;
         }
 
+        .feature-maps-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
         .feature-maps-title {
             font-size: 1rem;
             font-weight: 600;
@@ -545,6 +522,23 @@
         .load-features-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+        }
+
+        .maximize-features-btn {
+            background: linear-gradient(45deg, #ec4899, #be185d);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .maximize-features-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(236, 72, 153, 0.3);
         }
 
         .feature-maps-grid {
@@ -646,10 +640,8 @@
         }
 
         .feature-fullscreen-content {
-            width: 90vw;
-            height: 90vh;
-            max-width: 90vw;
-            max-height: 90vh;
+            width: 100vw;
+            height: 100vh;
             position: relative;
             text-align: center;
             display: flex;
@@ -675,14 +667,122 @@
 
         .feature-fullscreen-content img {
             flex: 1;
-            width: 100%;
-            max-width: 90vw;
-            max-height: calc(90vh - 100px);
-            border-radius: 10px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            width: 100vw;
+            height: calc(100vh - 80px);
+            border-radius: 0;
+            box-shadow: none;
             object-fit: contain;
             image-rendering: -webkit-optimize-contrast;
             image-rendering: pixelated;
+        }
+
+        /* Feature maps split-screen fullscreen styles */
+        .feature-maps-split-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 2000;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .feature-maps-split-panel {
+            background: rgba(30, 30, 30, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .feature-maps-split-header {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+            background: linear-gradient(45deg, #6366f1, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .feature-maps-split-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 8px;
+            overflow-y: auto;
+            flex: 1;
+            max-height: calc(100vh - 140px);
+            padding-right: 10px;
+        }
+
+        .feature-maps-split-grid::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .feature-maps-split-grid::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .feature-maps-split-grid::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.6);
+            border-radius: 4px;
+        }
+
+        .feature-maps-split-grid::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.8);
+        }
+
+        .feature-map-split-item {
+            aspect-ratio: 1;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .feature-map-split-item:hover {
+            border-color: rgba(99, 102, 241, 0.6);
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .feature-map-split-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .feature-map-split-tooltip {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 100;
+        }
+
+        .feature-map-split-item:hover .feature-map-split-tooltip {
+            opacity: 1;
         }
 
         /* Network topology visualization styles */
@@ -913,29 +1013,21 @@
             50% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
         }
 
-        .keyframe-indicators {
+        .animation-info {
             display: flex;
-            gap: 15px;
+            flex-direction: column;
             align-items: center;
+            gap: 8px;
         }
 
-        .keyframe-status {
-            font-size: 0.9rem;
+        .range-info {
+            font-size: 0.85rem;
             color: #94a3b8;
-        }
-
-        .keyframe-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            border: 2px solid #4b5563;
-            transition: all 0.3s ease;
-        }
-
-        .keyframe-dot.set {
-            background: linear-gradient(45deg, #10b981, #3b82f6);
-            border-color: #10b981;
-            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+            background: rgba(99, 102, 241, 0.1);
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            text-align: center;
         }
 
         .instructions {
@@ -1062,9 +1154,14 @@
                 <div class="feature-maps-container">
                     <div class="feature-maps-header">
                         <div class="feature-maps-title">Feature Maps</div>
-                        <button class="load-features-btn" id="load-picbreeder-features" onclick="toggleFeatureMaps('picbreeder')">
-                            Load Features
-                        </button>
+                        <div class="feature-maps-buttons">
+                            <button class="load-features-btn" id="load-picbreeder-features" onclick="toggleFeatureMaps('picbreeder')">
+                                Load Features
+                            </button>
+                            <button class="maximize-features-btn" id="maximize-picbreeder-features" onclick="enterFeatureMapsMaximize()" style="display: none;">
+                                ⛶ Maximize
+                            </button>
+                        </div>
                     </div>
                     <div class="feature-maps-grid" id="picbreeder-features">
                         <!-- Feature maps will be loaded here -->
@@ -1098,9 +1195,14 @@
                 <div class="feature-maps-container">
                     <div class="feature-maps-header">
                         <div class="feature-maps-title">Feature Maps</div>
-                        <button class="load-features-btn" id="load-sgd-features" onclick="toggleFeatureMaps('sgd')">
-                            Load Features
-                        </button>
+                        <div class="feature-maps-buttons">
+                            <button class="load-features-btn" id="load-sgd-features" onclick="toggleFeatureMaps('sgd')">
+                                Load Features
+                            </button>
+                            <button class="maximize-features-btn" id="maximize-sgd-features" onclick="enterFeatureMapsMaximize()" style="display: none;">
+                                ⛶ Maximize
+                            </button>
+                        </div>
                     </div>
                     <div class="feature-maps-grid" id="sgd-features">
                         <!-- Feature maps will be loaded here -->
@@ -1155,15 +1257,12 @@
             </div>
 
             <div class="animation-buttons">
-                <div class="keyframe-indicators">
-                    <div class="keyframe-status">IN</div>
-                    <div class="keyframe-dot" id="in-dot"></div>
-                    <div class="keyframe-status">OUT</div>
-                    <div class="keyframe-dot" id="out-dot"></div>
+                <div class="animation-info">
+                    <div class="range-info">All selected parameters will sweep from -1.000 to +1.000</div>
                 </div>
                 
                 <button class="anim-btn" id="play-btn" onclick="toggleAnimation()" disabled>
-                    ▶ Set Keyframes First
+                    ▶ Add Parameters First
                 </button>
                 
                 <button class="fullscreen-btn split-fullscreen" onclick="enterSplitFullscreen()" title="Split Fullscreen">
@@ -1223,7 +1322,7 @@
             single: null,
             split: { picbreeder: null, sgd: null }
         };
-        let animationMode = 'normal'; // 'normal' or 'bounce'
+        // Animation mode is now always bounce (reverse-loop)
         let animationInterval = null;
 
         // Initialize the app
@@ -1355,28 +1454,14 @@
                     return;
                 }
                 
-                if (e.code === 'KeyI') {
+                if (e.code === 'Space' || e.code === 'KeyR') {
                     e.preventDefault();
-                    console.log('I key pressed - setting IN keyframe');
-                    setKeyframe('in');
-                } else if (e.code === 'KeyO') {
-                    e.preventDefault();
-                    console.log('O key pressed - setting OUT keyframe');
-                    setKeyframe('out');
-                } else if (e.code === 'Space') {
-                    e.preventDefault();
-                    console.log('Space key pressed - starting/restarting animation');
-                    animationMode = 'normal';
-                    startOrRestartAnimation();
-                } else if (e.code === 'KeyR') {
-                    e.preventDefault();
-                    console.log('R key pressed - starting bounce loop animation');
-                    animationMode = 'bounce';
+                    console.log('Animation key pressed - starting/restarting animation of selected parameters');
                     startOrRestartAnimation();
                 }
             });
             
-            console.log('Keyboard listeners set up - Press I for IN keyframe, O for OUT keyframe, Space to start/restart, R for bounce loop');
+            console.log('Keyboard listeners set up - Press Space or R to animate all selected parameters');
         }
 
         async function loadModelData() {
@@ -1460,6 +1545,12 @@
                 // Hide feature maps
                 grid.classList.remove('visible');
                 button.textContent = 'Load Features';
+                
+                // Hide maximize button when feature maps are hidden
+                const maximizeBtn = document.getElementById(`maximize-${modelType}-features`);
+                if (maximizeBtn) {
+                    maximizeBtn.style.display = 'none';
+                }
                 return;
             }
             
@@ -1471,11 +1562,575 @@
                 await loadFeatureMaps(modelType);
                 grid.classList.add('visible');
                 button.textContent = 'Hide Features';
+                
+                // Show maximize button when feature maps are loaded
+                const maximizeBtn = document.getElementById(`maximize-${modelType}-features`);
+                if (maximizeBtn) {
+                    maximizeBtn.style.display = 'inline-block';
+                }
             } catch (error) {
                 console.error('Error loading feature maps:', error);
                 button.textContent = 'Load Features';
             } finally {
                 button.disabled = false;
+            }
+        }
+
+        async function enterFeatureMapsMaximize() {
+            try {
+                // Auto-load feature maps if not loaded
+                if (!featureMapsData['picbreeder']) {
+                    await loadFeatureMaps('picbreeder');
+                }
+                if (!featureMapsData['sgd']) {
+                    await loadFeatureMaps('sgd');
+                }
+
+                // Create fullscreen container
+                const fullscreenDiv = document.createElement('div');
+                fullscreenDiv.className = 'feature-fullscreen-container';
+                fullscreenDiv.id = 'feature-maps-maximize-container';
+                
+                // Create header with controls
+                const headerDiv = document.createElement('div');
+                headerDiv.style.cssText = `
+                    position: absolute;
+                    top: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    z-index: 10;
+                    display: flex;
+                    gap: 20px;
+                    align-items: center;
+                    background: rgba(0, 0, 0, 0.8);
+                    padding: 15px;
+                    border-radius: 10px;
+                    backdrop-filter: blur(10px);
+                `;
+                
+                // View mode selector
+                const viewModeDiv = document.createElement('div');
+                viewModeDiv.innerHTML = `
+                    <label style="color: white; margin-right: 10px;">View:</label>
+                    <select id="view-mode-select" style="padding: 5px; border-radius: 5px; background: #374151; color: white; border: none;">
+                        <option value="split">Split View</option>
+                        <option value="picbreeder">Picbreeder Only</option>
+                        <option value="sgd">SGD Only</option>
+                    </select>
+                `;
+                
+                // Size slider
+                const sizeSliderDiv = document.createElement('div');
+                sizeSliderDiv.innerHTML = `
+                    <label style="color: white; margin-right: 10px;">Size:</label>
+                    <input type="range" id="feature-size-slider" min="40" max="200" value="80" 
+                           style="width: 150px; margin-right: 10px;">
+                    <span id="size-value" style="color: white;">80px</span>
+                `;
+                
+                headerDiv.appendChild(viewModeDiv);
+                headerDiv.appendChild(sizeSliderDiv);
+                
+                // Create main content container
+                const contentDiv = document.createElement('div');
+                contentDiv.id = 'maximize-content';
+                contentDiv.style.cssText = `
+                    width: 100vw;
+                    height: 100vh;
+                    padding: 80px 20px 20px 20px;
+                    overflow-y: auto;
+                `;
+                
+                // Create grid container
+                const gridContainer = document.createElement('div');
+                gridContainer.id = 'maximize-grid';
+                gridContainer.style.cssText = `
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+                    gap: 2px;
+                    width: 100%;
+                `;
+                
+                contentDiv.appendChild(gridContainer);
+                
+                // Create close button
+                const closeBtn = document.createElement('button');
+                closeBtn.className = 'fullscreen-close';
+                closeBtn.innerHTML = '×';
+                closeBtn.onclick = exitFeatureMapsMaximize;
+                
+                fullscreenDiv.appendChild(headerDiv);
+                fullscreenDiv.appendChild(contentDiv);
+                fullscreenDiv.appendChild(closeBtn);
+                document.body.appendChild(fullscreenDiv);
+                
+                // Set up event listeners
+                const viewModeSelect = document.getElementById('view-mode-select');
+                const sizeSlider = document.getElementById('feature-size-slider');
+                const sizeValue = document.getElementById('size-value');
+                
+                viewModeSelect.addEventListener('change', updateMaximizeView);
+                sizeSlider.addEventListener('input', (e) => {
+                    const size = e.target.value;
+                    sizeValue.textContent = `${size}px`;
+                    updateGridSize(size);
+                });
+                
+                // Initial render
+                updateMaximizeView();
+                
+                // Add escape key listener
+                document.addEventListener('keydown', onFeatureMapsMaximizeKeydown);
+                
+            } catch (error) {
+                console.error('Error entering feature maps maximize:', error);
+                alert('Error opening fullscreen view. Please try again.');
+            }
+        }
+
+        function updateMaximizeView() {
+            const viewMode = document.getElementById('view-mode-select').value;
+            const gridContainer = document.getElementById('maximize-grid');
+            gridContainer.innerHTML = '';
+            
+            if (viewMode === 'split') {
+                // Split view: show both models side by side
+                const picbreederSection = createMaximizeSection('picbreeder', 'Picbreeder');
+                const sgdSection = createMaximizeSection('sgd', 'SGD');
+                gridContainer.style.display = 'grid';
+                gridContainer.style.gridTemplateColumns = '1fr 1fr';
+                gridContainer.style.gap = '20px';
+                gridContainer.appendChild(picbreederSection);
+                gridContainer.appendChild(sgdSection);
+            } else {
+                // Single model view: show all features in one grid
+                gridContainer.style.display = 'grid';
+                gridContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(80px, 1fr))';
+                gridContainer.style.gap = '2px';
+                
+                if (featureMapsData[viewMode]) {
+                    featureMapsData[viewMode].feature_maps.forEach(layer => {
+                        layer.features.forEach(feature => {
+                            const featureDiv = createFeatureDiv(viewMode, feature);
+                            gridContainer.appendChild(featureDiv);
+                        });
+                    });
+                }
+            }
+        }
+        
+        function createMaximizeSection(modelType, title) {
+            const section = document.createElement('div');
+            section.style.cssText = `
+                background: rgba(20, 20, 20, 0.8);
+                border-radius: 10px;
+                padding: 20px;
+                overflow-y: auto;
+                max-height: calc(100vh - 120px);
+            `;
+            
+            const sectionTitle = document.createElement('h3');
+            sectionTitle.textContent = title;
+            sectionTitle.style.cssText = `
+                color: ${modelType === 'picbreeder' ? '#10b981' : '#3b82f6'};
+                margin: 0 0 20px 0;
+                text-align: center;
+                font-size: 1.2em;
+            `;
+            section.appendChild(sectionTitle);
+            
+            if (featureMapsData[modelType]) {
+                const featuresGrid = document.createElement('div');
+                featuresGrid.style.cssText = `
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+                    gap: 2px;
+                `;
+                
+                featureMapsData[modelType].feature_maps.forEach(layer => {
+                    layer.features.forEach(feature => {
+                        const featureDiv = createFeatureDiv(modelType, feature);
+                        featuresGrid.appendChild(featureDiv);
+                    });
+                });
+                
+                section.appendChild(featuresGrid);
+            } else {
+                const noDataMsg = document.createElement('div');
+                noDataMsg.textContent = 'No feature maps loaded';
+                noDataMsg.style.cssText = `
+                    color: #94a3b8;
+                    text-align: center;
+                    padding: 40px;
+                    font-style: italic;
+                `;
+                section.appendChild(noDataMsg);
+            }
+            
+            return section;
+        }
+        
+        function createFeatureDiv(modelType, feature) {
+            const featureDiv = document.createElement('div');
+            featureDiv.className = 'feature-map-maximize';
+            featureDiv.dataset.weightId = feature.weight_id;
+            featureDiv.dataset.modelType = modelType;
+            featureDiv.style.cssText = `
+                position: relative;
+                aspect-ratio: 1;
+                border-radius: 4px;
+                overflow: hidden;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                border: 2px solid ${activeSliders[modelType][feature.weight_id] ? '#ffd700' : 'transparent'};
+                box-shadow: ${activeSliders[modelType][feature.weight_id] ? '0 0 10px rgba(255, 215, 0, 0.5)' : 'none'};
+            `;
+            
+            const img = document.createElement('img');
+            img.src = feature.image;
+            img.alt = `${modelType} Weight ${feature.weight_id}`;
+            img.style.cssText = `
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                display: block;
+            `;
+            
+            const tooltip = document.createElement('div');
+            tooltip.textContent = `${modelType.charAt(0).toUpperCase()}${modelType.slice(1)} W${feature.weight_id}`;
+            tooltip.style.cssText = `
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: rgba(0, 0, 0, 0.9);
+                color: white;
+                text-align: center;
+                padding: 2px;
+                font-size: 0.7em;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            `;
+            
+            featureDiv.appendChild(img);
+            featureDiv.appendChild(tooltip);
+            
+            // Add hover effects
+            featureDiv.addEventListener('mouseenter', () => {
+                tooltip.style.opacity = '1';
+                featureDiv.style.transform = 'scale(1.05)';
+            });
+            featureDiv.addEventListener('mouseleave', () => {
+                tooltip.style.opacity = '0';
+                featureDiv.style.transform = 'scale(1)';
+            });
+            
+            // Add click handlers
+            featureDiv.addEventListener('click', () => {
+                toggleFeatureSelection(modelType, feature.weight_id, featureDiv);
+                // Update visual selection state
+                if (activeSliders[modelType][feature.weight_id]) {
+                    featureDiv.style.border = '2px solid #ffd700';
+                    featureDiv.style.boxShadow = '0 0 10px rgba(255, 215, 0, 0.5)';
+                } else {
+                    featureDiv.style.border = '2px solid transparent';
+                    featureDiv.style.boxShadow = 'none';
+                }
+            });
+            
+            featureDiv.addEventListener('dblclick', (e) => {
+                e.stopPropagation();
+                // Open image browser for this feature
+                openFeatureImageBrowser(modelType, feature.weight_id);
+            });
+            
+            return featureDiv;
+        }
+        
+        function updateGridSize(size) {
+            const gridContainer = document.getElementById('maximize-grid');
+            const viewMode = document.getElementById('view-mode-select').value;
+            
+            if (viewMode === 'split') {
+                // Update both sections in split view
+                const sections = gridContainer.querySelectorAll('div > div:last-child');
+                sections.forEach(section => {
+                    section.style.gridTemplateColumns = `repeat(auto-fit, minmax(${size}px, 1fr))`;
+                });
+            } else {
+                // Update main grid in single view
+                gridContainer.style.gridTemplateColumns = `repeat(auto-fit, minmax(${size}px, 1fr))`;
+            }
+        }
+
+        function openFeatureImageBrowser(modelType, weightId) {
+            const viewMode = document.getElementById('view-mode-select').value;
+            
+            // Get all features from the current view
+            let allFeatures = [];
+            if (viewMode === 'split') {
+                // In split view, only show features from the selected model type
+                if (featureMapsData[modelType]) {
+                    featureMapsData[modelType].feature_maps.forEach(layer => {
+                        layer.features.forEach(feature => {
+                            allFeatures.push({ ...feature, modelType });
+                        });
+                    });
+                }
+            } else {
+                // In single view, show features from the selected model type
+                if (featureMapsData[viewMode]) {
+                    featureMapsData[viewMode].feature_maps.forEach(layer => {
+                        layer.features.forEach(feature => {
+                            allFeatures.push({ ...feature, modelType: viewMode });
+                        });
+                    });
+                }
+            }
+            
+            // Find current feature index
+            const currentIndex = allFeatures.findIndex(f => f.modelType === modelType && f.weight_id === weightId);
+            if (currentIndex === -1) return;
+            
+            // Create browser container
+            const browserDiv = document.createElement('div');
+            browserDiv.id = 'feature-browser-container';
+            browserDiv.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.95);
+                z-index: 3000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                backdrop-filter: blur(10px);
+            `;
+            
+            // Create image container
+            const imageContainer = document.createElement('div');
+            imageContainer.style.cssText = `
+                position: relative;
+                width: 100vw;
+                height: 100vh;
+            `;
+            
+            // Create main image
+            const mainImage = document.createElement('img');
+            mainImage.id = 'browser-main-image';
+            mainImage.style.cssText = `
+                width: 100vw;
+                height: 100vh;
+                object-fit: contain;
+                border-radius: 0;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            `;
+            
+            // Create left arrow
+            const leftArrow = document.createElement('button');
+            leftArrow.innerHTML = '‹';
+            leftArrow.style.cssText = `
+                position: absolute;
+                left: -80px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: rgba(255, 255, 255, 0.2);
+                border: none;
+                color: white;
+                font-size: 3rem;
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                backdrop-filter: blur(10px);
+            `;
+            
+            // Create right arrow
+            const rightArrow = document.createElement('button');
+            rightArrow.innerHTML = '›';
+            rightArrow.style.cssText = `
+                position: absolute;
+                right: -80px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: rgba(255, 255, 255, 0.2);
+                border: none;
+                color: white;
+                font-size: 3rem;
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                backdrop-filter: blur(10px);
+            `;
+            
+            // Create info display
+            const infoDiv = document.createElement('div');
+            infoDiv.id = 'browser-info';
+            infoDiv.style.cssText = `
+                position: absolute;
+                top: -60px;
+                left: 50%;
+                transform: translateX(-50%);
+                color: white;
+                text-align: center;
+                background: rgba(0, 0, 0, 0.8);
+                padding: 10px 20px;
+                border-radius: 10px;
+                backdrop-filter: blur(5px);
+            `;
+            
+            // Create close button
+            const closeBtn = document.createElement('button');
+            closeBtn.innerHTML = '×';
+            closeBtn.style.cssText = `
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                background: rgba(239, 68, 68, 0.8);
+                border: none;
+                color: white;
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                cursor: pointer;
+                font-size: 1.2rem;
+                transition: all 0.3s ease;
+            `;
+            
+            imageContainer.appendChild(mainImage);
+            imageContainer.appendChild(leftArrow);
+            imageContainer.appendChild(rightArrow);
+            imageContainer.appendChild(infoDiv);
+            browserDiv.appendChild(imageContainer);
+            browserDiv.appendChild(closeBtn);
+            document.body.appendChild(browserDiv);
+            
+            // State management
+            let currentIdx = currentIndex;
+            
+            function updateBrowserImage() {
+                const feature = allFeatures[currentIdx];
+                
+                // Show low-res image immediately
+                mainImage.src = feature.image;
+                mainImage.style.filter = 'blur(1px)';
+                
+                infoDiv.innerHTML = `
+                    <div style="font-size: 1.1em; font-weight: bold;">${feature.modelType.toUpperCase()} Weight ${feature.weight_id}</div>
+                    <div style="font-size: 0.9em; opacity: 0.8;">${currentIdx + 1} of ${allFeatures.length} <span id="loading-indicator" style="color: #6366f1;">Loading HD...</span></div>
+                `;
+                
+                // Load high-resolution version
+                loadHighResFeatureMap(feature.modelType, feature.weight_id)
+                    .then(hiResImage => {
+                        // Only update if this is still the current image
+                        if (currentIdx === allFeatures.findIndex(f => f.modelType === feature.modelType && f.weight_id === feature.weight_id)) {
+                            mainImage.src = hiResImage;
+                            mainImage.style.filter = 'none';
+                            const loadingIndicator = document.getElementById('loading-indicator');
+                            if (loadingIndicator) {
+                                loadingIndicator.textContent = 'HD';
+                                loadingIndicator.style.color = '#10b981';
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.log('Failed to load high-res image:', error);
+                        mainImage.style.filter = 'none';
+                        const loadingIndicator = document.getElementById('loading-indicator');
+                        if (loadingIndicator) {
+                            loadingIndicator.textContent = '';
+                        }
+                    });
+                
+                // Update arrow visibility
+                leftArrow.style.opacity = currentIdx > 0 ? '1' : '0.3';
+                rightArrow.style.opacity = currentIdx < allFeatures.length - 1 ? '1' : '0.3';
+            }
+
+            async function loadHighResFeatureMap(modelType, weightId) {
+                try {
+                    const modelKey = `${modelType}_${currentModel}`;
+                    const response = await fetch(`/api/feature_map_hires/${modelKey}/${weightId}?img_size=500`);
+                    const data = await response.json();
+                    return data.image;
+                } catch (error) {
+                    throw new Error('Failed to load high-res feature map');
+                }
+            }
+            
+            // Event handlers
+            leftArrow.addEventListener('click', () => {
+                if (currentIdx > 0) {
+                    currentIdx--;
+                    updateBrowserImage();
+                }
+            });
+            
+            rightArrow.addEventListener('click', () => {
+                if (currentIdx < allFeatures.length - 1) {
+                    currentIdx++;
+                    updateBrowserImage();
+                }
+            });
+            
+            closeBtn.addEventListener('click', () => {
+                browserDiv.remove();
+                document.removeEventListener('keydown', browserKeyHandler);
+            });
+            
+            // Keyboard navigation
+            function browserKeyHandler(e) {
+                if (e.key === 'Escape') {
+                    browserDiv.remove();
+                    document.removeEventListener('keydown', browserKeyHandler);
+                } else if (e.key === 'ArrowLeft' && currentIdx > 0) {
+                    currentIdx--;
+                    updateBrowserImage();
+                } else if (e.key === 'ArrowRight' && currentIdx < allFeatures.length - 1) {
+                    currentIdx++;
+                    updateBrowserImage();
+                }
+            }
+            
+            document.addEventListener('keydown', browserKeyHandler);
+            
+            // Hover effects
+            leftArrow.addEventListener('mouseenter', () => {
+                if (currentIdx > 0) leftArrow.style.background = 'rgba(255, 255, 255, 0.3)';
+            });
+            leftArrow.addEventListener('mouseleave', () => {
+                leftArrow.style.background = 'rgba(255, 255, 255, 0.2)';
+            });
+            
+            rightArrow.addEventListener('mouseenter', () => {
+                if (currentIdx < allFeatures.length - 1) rightArrow.style.background = 'rgba(255, 255, 255, 0.3)';
+            });
+            rightArrow.addEventListener('mouseleave', () => {
+                rightArrow.style.background = 'rgba(255, 255, 255, 0.2)';
+            });
+            
+            // Initial setup
+            updateBrowserImage();
+        }
+
+        function exitFeatureMapsMaximize() {
+            const featureMaximizeContainer = document.getElementById('feature-maps-maximize-container');
+            if (featureMaximizeContainer) {
+                featureMaximizeContainer.remove();
+                document.removeEventListener('keydown', onFeatureMapsMaximizeKeydown);
+                console.log('Exited feature maps maximize mode');
+            }
+        }
+
+        function onFeatureMapsMaximizeKeydown(event) {
+            if (event.key === 'Escape') {
+                exitFeatureMapsMaximize();
             }
         }
 
@@ -1583,21 +2238,15 @@
                 </div>
                 <div class="weight-info">Weight ID: ${weightId} | Layer: ? | Neuron: ?</div>
                 <div class="slider-track-container">
-                    <div class="keyframe-bar in-bar" id="${modelType}-in-bar-${weightId}"></div>
-                    <div class="keyframe-bar out-bar" id="${modelType}-out-bar-${weightId}"></div>
                     <input type="range" class="slider" 
                            id="${modelType}-slider-input-${weightId}" 
                            min="-1" max="1" step="0.01" value="0">
                 </div>
                 <div class="slider-value" id="${modelType}-value-${weightId}">0.000</div>
-                <div class="keyframe-indicators-slider" id="${modelType}-keyframes-${weightId}">
-                    <div class="keyframe-value-row">
-                        <span class="keyframe-label">IN:</span>
-                        <span class="keyframe-value" id="${modelType}-in-value-${weightId}">Not Set</span>
-                    </div>
-                    <div class="keyframe-value-row">
-                        <span class="keyframe-label">OUT:</span>
-                        <span class="keyframe-value" id="${modelType}-out-value-${weightId}">Not Set</span>
+                <div class="slider-info" id="${modelType}-info-${weightId}">
+                    <div class="slider-range-info">
+                        <span class="range-label">Animation Range:</span>
+                        <span class="range-value">-1.000 to +1.000</span>
                     </div>
                 </div>
             `;
@@ -1627,6 +2276,9 @@
             
             // Update feature map selection if visible
             updateFeatureMapSelection(modelType, weightId, true);
+            
+            // Update play button state
+            updatePlayButton();
         }
 
         function removeSlider(modelType, weightId) {
@@ -1637,20 +2289,13 @@
             
             delete activeSliders[modelType][weightId];
             
-            // Clear keyframes for this weight
-            if (weightKeyframes[modelType] && weightKeyframes[modelType][weightId]) {
-                delete weightKeyframes[modelType][weightId];
-                updateKeyframeUI();
-                updateSliderKeyframeIndicators();
-                updatePlayButton();
-                clearAnimationCache();
-            }
-            
             // Clear selection if this weight was selected
             if (selectedWeight && selectedWeight.modelType === modelType && selectedWeight.weightId == weightId) {
                 selectedWeight = null;
-                updateKeyframeUI();
             }
+            
+            updatePlayButton();
+            clearAnimationCache();
             
             // Update feature map selection if visible
             updateFeatureMapSelection(modelType, weightId, false);
@@ -1687,7 +2332,9 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        weight_deltas: { ...picbreederWeights, ...sgdWeights },
+                        picbreeder_deltas: picbreederWeights,
+                        sgd_deltas: sgdWeights,
+                        weight_deltas: {}, // Backward compatibility
                         img_size: animationSettings.resolution
                     })
                 });
@@ -1825,142 +2472,49 @@
             }
         }
 
+
         function updateKeyframeUI() {
-            const inDot = document.getElementById('in-dot');
-            const outDot = document.getElementById('out-dot');
-            
-            if (selectedWeight) {
-                const { modelType, weightId } = selectedWeight;
-                const weightKeyframe = weightKeyframes[modelType][weightId];
-                
-                inDot.classList.toggle('set', weightKeyframe && weightKeyframe.in !== undefined);
-                outDot.classList.toggle('set', weightKeyframe && weightKeyframe.out !== undefined);
-            } else {
-                inDot.classList.remove('set');
-                outDot.classList.remove('set');
-            }
+            // Keyframe UI no longer exists - this is a no-op function for compatibility
         }
 
         function updateSliderKeyframeIndicators() {
-            // Update visual indicators for all sliders
-            ['picbreeder', 'sgd'].forEach(modelType => {
-                Object.keys(activeSliders[modelType]).forEach(weightId => {
-                    const sliderElement = document.getElementById(`${modelType}-slider-${weightId}`);
-                    const keyframeIndicator = document.getElementById(`${modelType}-keyframes-${weightId}`);
-                    const inValueElement = document.getElementById(`${modelType}-in-value-${weightId}`);
-                    const outValueElement = document.getElementById(`${modelType}-out-value-${weightId}`);
-                    
-                    if (sliderElement && keyframeIndicator && inValueElement && outValueElement) {
-                        const keyframe = weightKeyframes[modelType][weightId];
-                        const hasIn = keyframe && keyframe.in !== undefined;
-                        const hasOut = keyframe && keyframe.out !== undefined;
-                        
-                        // Update border indicators
-                        sliderElement.classList.toggle('has-keyframes', hasIn || hasOut);
-                        sliderElement.classList.toggle('has-both-keyframes', hasIn && hasOut);
-                        
-                        // Show/hide keyframe value indicators
-                        keyframeIndicator.classList.toggle('visible', hasIn || hasOut);
-                        
-                        // Update IN value
-                        if (hasIn) {
-                            inValueElement.textContent = keyframe.in.toFixed(3);
-                            inValueElement.style.color = '#10b981';
-                        } else {
-                            inValueElement.textContent = 'Not Set';
-                            inValueElement.style.color = '#64748b';
-                        }
-                        
-                        // Update OUT value
-                        if (hasOut) {
-                            outValueElement.textContent = keyframe.out.toFixed(3);
-                            outValueElement.style.color = '#10b981';
-                        } else {
-                            outValueElement.textContent = 'Not Set';
-                            outValueElement.style.color = '#64748b';
-                        }
-                        
-                        // Update keyframe bar positions
-                        updateKeyframeBars(modelType, weightId, keyframe);
-                    }
-                });
-            });
+            // No longer needed - simplified animation system doesn't use keyframe indicators
         }
 
         function updateKeyframeBars(modelType, weightId, keyframe) {
-            const inBar = document.getElementById(`${modelType}-in-bar-${weightId}`);
-            const outBar = document.getElementById(`${modelType}-out-bar-${weightId}`);
-            const slider = document.getElementById(`${modelType}-slider-input-${weightId}`);
-            
-            if (!inBar || !outBar || !slider) return;
-            
-            const sliderRect = slider.getBoundingClientRect();
-            const sliderWidth = sliderRect.width;
-            
-            // Convert value (-1 to 1) to position (0 to 100%)
-            function valueToPosition(value) {
-                return ((value + 1) / 2) * 100; // Convert -1..1 to 0..100%
-            }
-            
-            // Update IN bar
-            if (keyframe && keyframe.in !== undefined) {
-                const inPosition = valueToPosition(keyframe.in);
-                inBar.style.left = `${inPosition}%`;
-                inBar.classList.add('visible');
-            } else {
-                inBar.classList.remove('visible');
-            }
-            
-            // Update OUT bar
-            if (keyframe && keyframe.out !== undefined) {
-                const outPosition = valueToPosition(keyframe.out);
-                outBar.style.left = `${outPosition}%`;
-                outBar.classList.add('visible');
-            } else {
-                outBar.classList.remove('visible');
-            }
+            // No longer needed - simplified animation system doesn't use keyframe bars
         }
 
         function updatePlayButton() {
             const playBtn = document.getElementById('play-btn');
             
-            // Check if any weight has both in and out keyframes
-            let hasAnimatableWeights = false;
+            // Check if any model has active sliders
+            let hasActiveSliders = false;
             ['picbreeder', 'sgd'].forEach(modelType => {
-                Object.keys(weightKeyframes[modelType]).forEach(weightId => {
-                    const keyframe = weightKeyframes[modelType][weightId];
-                    if (keyframe && keyframe.in !== undefined && keyframe.out !== undefined) {
-                        hasAnimatableWeights = true;
-                    }
-                });
+                if (Object.keys(activeSliders[modelType]).length > 0) {
+                    hasActiveSliders = true;
+                }
             });
             
-            playBtn.disabled = !hasAnimatableWeights;
+            playBtn.disabled = !hasActiveSliders;
             
             if (isGenerating) {
                 playBtn.textContent = '🎬 Generating...';
                 playBtn.classList.add('generating');
             } else if (isAnimating) {
-                const modeText = animationMode === 'bounce' ? 'Bounce Loop' : 'Playing';
-                playBtn.textContent = `⏸ Stop ${modeText}`;
+                playBtn.textContent = '⏸ Stop Animation';
                 playBtn.classList.remove('generating');
-            } else if (hasAnimatableWeights) {
-                playBtn.textContent = '▶ Play Animation';
+            } else if (hasActiveSliders) {
+                playBtn.textContent = '▶ Animate Parameters';
                 playBtn.classList.remove('generating');
             } else {
-                playBtn.textContent = '▶ Select Weight & Set Keyframes';
+                playBtn.textContent = '▶ Add Parameters First';
                 playBtn.classList.remove('generating');
             }
         }
 
         function clearKeyframes() {
             selectedWeight = null;
-            weightKeyframes = {
-                picbreeder: {},
-                sgd: {}
-            };
-            updateKeyframeUI();
-            updateSliderKeyframeIndicators();
             updatePlayButton();
             clearAnimationCache();
             
@@ -1983,8 +2537,6 @@
                 sliderElement.classList.add('selected');
             }
             
-            updateKeyframeUI();
-            
             console.log(`Selected weight: ${modelType} ${weightId}`);
         }
 
@@ -1996,24 +2548,23 @@
                 stopAnimation();
             }
             
-            // Check if any weight has both keyframes
-            let canAnimate = false;
+            // Check which model types have active sliders
+            let modelTypesWithSliders = [];
             ['picbreeder', 'sgd'].forEach(modelType => {
-                Object.keys(weightKeyframes[modelType]).forEach(weightId => {
-                    const keyframe = weightKeyframes[modelType][weightId];
-                    if (keyframe && keyframe.in !== undefined && keyframe.out !== undefined) {
-                        canAnimate = true;
-                    }
-                });
+                if (Object.keys(activeSliders[modelType]).length > 0) {
+                    modelTypesWithSliders.push(modelType);
+                }
             });
             
-            if (!canAnimate) {
-                console.log('Need to select a weight and set both IN and OUT keyframes to animate');
+            if (modelTypesWithSliders.length === 0) {
+                console.log('No active sliders found. Add some sliders to animate.');
                 return;
             }
             
-            // Generate frames if not cached or if frames don't exist for both models
-            const needsGeneration = animationFrames.picbreeder.length === 0 || animationFrames.sgd.length === 0;
+            // Generate frames if not cached or if frames don't exist for model types with sliders
+            const needsGeneration = modelTypesWithSliders.some(modelType => 
+                animationFrames[modelType].length === 0
+            );
             
             if (needsGeneration) {
                 const success = await generateAnimationFrames();
@@ -2036,19 +2587,22 @@
         async function generateAnimationFrames() {
             if (isGenerating) return false;
             
-            // Find weights that have both keyframes
+            // Find all active sliders and determine which model types need animation
             let animatableWeights = [];
+            let modelTypesWithSliders = [];
+            
             ['picbreeder', 'sgd'].forEach(modelType => {
-                Object.keys(weightKeyframes[modelType]).forEach(weightId => {
-                    const keyframe = weightKeyframes[modelType][weightId];
-                    if (keyframe && keyframe.in !== undefined && keyframe.out !== undefined) {
-                        animatableWeights.push({ modelType, weightId, keyframe });
-                    }
-                });
+                if (Object.keys(activeSliders[modelType]).length > 0) {
+                    modelTypesWithSliders.push(modelType);
+                    // Add all active sliders for this model type to animatableWeights
+                    Object.keys(activeSliders[modelType]).forEach(weightId => {
+                        animatableWeights.push({ modelType, weightId });
+                    });
+                }
             });
             
             if (animatableWeights.length === 0) {
-                console.log('No weights with both keyframes found');
+                console.log('No active sliders found for animation');
                 return false;
             }
             
@@ -2059,16 +2613,17 @@
             showProgress(true);
             updateProgress(0, 'Preparing animation frames...');
             
-            console.log('Generating animation frames for', animatableWeights.length, 'weights...');
+            console.log('Generating animation frames for', animatableWeights.length, 'weights across', modelTypesWithSliders.length, 'model types...');
             
             try {
                 const frameCount = animationSettings.frameCount;
                 const easingFunction = easingFunctions[animationSettings.easing];
                 const batchSize = animationSettings.batchSize;
                 
-                // Clear existing frames
-                animationFrames.picbreeder = [];
-                animationFrames.sgd = [];
+                // Clear existing frames for model types that have sliders
+                modelTypesWithSliders.forEach(modelType => {
+                    animationFrames[modelType] = [];
+                });
                 
                 // Prepare all frame data first
                 const allFrameData = [];
@@ -2076,24 +2631,20 @@
                     const t = frame / (frameCount - 1); // 0 to 1
                     const easedT = easingFunction(t);
                     
-                    // Calculate interpolated values for all animatable weights
-                    const picbreederWeights = getWeightDeltas('picbreeder');
-                    const sgdWeights = getWeightDeltas('sgd');
-                    
-                    // Apply interpolated values for weights with keyframes
-                    animatableWeights.forEach(({ modelType, weightId, keyframe }) => {
-                        const interpolatedValue = keyframe.in + (keyframe.out - keyframe.in) * easedT;
-                        if (modelType === 'picbreeder') {
-                            picbreederWeights[weightId] = interpolatedValue;
-                        } else {
-                            sgdWeights[weightId] = interpolatedValue;
-                        }
+                    // Initialize frame data for model types with sliders
+                    const frameData = {};
+                    modelTypesWithSliders.forEach(modelType => {
+                        frameData[modelType] = {};
                     });
                     
-                    allFrameData.push({
-                        picbreeder: picbreederWeights,
-                        sgd: sgdWeights
+                    // Apply interpolated values for all active sliders (animate from -1 to +1)
+                    animatableWeights.forEach(({ modelType, weightId }) => {
+                        // Animate from -1 to +1 over the course of the animation
+                        const interpolatedValue = -1 + (2 * easedT); // -1 + (2 * easedT) gives range from -1 to +1
+                        frameData[modelType][parseInt(weightId)] = interpolatedValue;
                     });
+                    
+                    allFrameData.push(frameData);
                 }
                 
                 // Process frames in batches
@@ -2130,9 +2681,13 @@
                     
                     const batchData = await response.json();
                     
-                    // Add frames from this batch to our collection
-                    animationFrames.picbreeder.push(...batchData.picbreeder_frames);
-                    animationFrames.sgd.push(...batchData.sgd_frames);
+                    // Add frames from this batch to our collection for model types with sliders
+                    modelTypesWithSliders.forEach(modelType => {
+                        const framesKey = `${modelType}_frames`;
+                        if (batchData[framesKey]) {
+                            animationFrames[modelType].push(...batchData[framesKey]);
+                        }
+                    });
                     
                     processedFrames += currentBatchSize;
                     
@@ -2162,8 +2717,12 @@
         }
 
         function playAnimation() {
-            // Check if we have frames for both models
-            if (animationFrames.picbreeder.length === 0 || animationFrames.sgd.length === 0) {
+            // Check which model types have frames to play
+            const modelTypesWithFrames = ['picbreeder', 'sgd'].filter(modelType => 
+                animationFrames[modelType].length > 0
+            );
+            
+            if (modelTypesWithFrames.length === 0) {
                 console.error('No animation frames to play');
                 return;
             }
@@ -2171,7 +2730,8 @@
             isAnimating = true;
             updatePlayButton();
             
-            const frameCount = animationFrames.picbreeder.length;
+            // Use the frame count from the first model type with frames
+            const frameCount = animationFrames[modelTypesWithFrames[0]].length;
             const frameDuration = animationSettings.duration / frameCount;
             
             let currentFrame = 0;
@@ -2184,44 +2744,32 @@
                     return;
                 }
                 
-                // console.log(`Playing frame ${currentFrame + 1}/${frameCount} (${animationMode} mode)`);
+                // console.log(`Playing frame ${currentFrame + 1}/${frameCount} (bounce mode)`);
                 
-                // Draw current frame on both canvases
-                drawImageOnCanvas('picbreeder', animationFrames.picbreeder[currentFrame]);
-                drawImageOnCanvas('sgd', animationFrames.sgd[currentFrame]);
+                // Draw current frame on canvases for model types that have frames
+                modelTypesWithFrames.forEach(modelType => {
+                    drawImageOnCanvas(modelType, animationFrames[modelType][currentFrame]);
+                });
                 
-                // Update frame index based on mode
-                if (animationMode === 'bounce') {
-                    currentFrame += direction;
-                    
-                    // Check if we need to reverse direction
-                    if (currentFrame >= frameCount - 1) {
-                        direction = -1; // Start going backward
-                        currentFrame = frameCount - 1;
-                        bounceCount++;
-                    } else if (currentFrame <= 0) {
-                        direction = 1; // Start going forward
-                        currentFrame = 0;
-                        bounceCount++;
-                    }
-                    
-                    // Continue bouncing indefinitely
-                    setTimeout(playFrame, frameDuration);
-                } else {
-                    // Normal mode - play once
-                    currentFrame++;
-                    
-                    if (currentFrame < frameCount) {
-                        setTimeout(playFrame, frameDuration);
-                    } else {
-                        // Animation complete
-                        setTimeout(() => stopAnimation(), frameDuration);
-                    }
+                // Always use bounce mode (reverse-loop)
+                currentFrame += direction;
+                
+                // Check if we need to reverse direction
+                if (currentFrame >= frameCount - 1) {
+                    direction = -1; // Start going backward
+                    currentFrame = frameCount - 1;
+                    bounceCount++;
+                } else if (currentFrame <= 0) {
+                    direction = 1; // Start going forward
+                    currentFrame = 0;
+                    bounceCount++;
                 }
+                
+                // Continue bouncing indefinitely
+                setTimeout(playFrame, frameDuration);
             };
             
-            const modeText = animationMode === 'bounce' ? 'bounce loop' : 'normal';
-            console.log(`Playing ${modeText} animation: ${frameCount} frames over ${animationSettings.duration}ms per cycle`);
+            console.log(`Playing reverse-loop animation: ${frameCount} frames over ${animationSettings.duration}ms per cycle for models: ${modelTypesWithFrames.join(', ')}`);
             playFrame();
         }
 
