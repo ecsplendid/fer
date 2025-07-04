@@ -1258,7 +1258,7 @@
 
             <div class="animation-buttons">
                 <div class="animation-info">
-                    <div class="range-info">All selected parameters will sweep from -1.000 to +1.000</div>
+                    <div class="range-info">Parameters will sweep through their individual ranges</div>
                 </div>
                 
                 <button class="anim-btn" id="play-btn" onclick="toggleAnimation()" disabled>
@@ -1517,7 +1517,8 @@
                 if (suggestions.weight_ids && suggestions.weight_ids.length > 0) {
                     suggestions.weight_ids.forEach((weightId, index) => {
                         const description = suggestions.descriptions[index] || `Weight ${weightId}`;
-                        addSlider('picbreeder', weightId, description);
+                        const range = suggestions.ranges && suggestions.ranges[index] ? suggestions.ranges[index] : [-1.0, 1.0];
+                        addSlider('picbreeder', weightId, description, range[0], range[1]);
                     });
                 }
             }
@@ -2218,12 +2219,14 @@
             }
         }
 
-        function addSlider(modelType, weightId, description) {
+        function addSlider(modelType, weightId, description, minVal = -1.0, maxVal = 1.0) {
             if (activeSliders[modelType][weightId]) return; // Already exists
             
             activeSliders[modelType][weightId] = {
                 value: 0,
-                description: description
+                description: description,
+                min: minVal,
+                max: maxVal
             };
             
             const container = document.getElementById(`${modelType}-sliders`);
@@ -2240,13 +2243,13 @@
                 <div class="slider-track-container">
                     <input type="range" class="slider" 
                            id="${modelType}-slider-input-${weightId}" 
-                           min="-1" max="1" step="0.01" value="0">
+                           min="${minVal}" max="${maxVal}" step="0.01" value="0">
                 </div>
                 <div class="slider-value" id="${modelType}-value-${weightId}">0.000</div>
                 <div class="slider-info" id="${modelType}-info-${weightId}">
                     <div class="slider-range-info">
                         <span class="range-label">Animation Range:</span>
-                        <span class="range-value">-1.000 to +1.000</span>
+                        <span class="range-value">${minVal.toFixed(3)} to ${maxVal.toFixed(3)}</span>
                     </div>
                 </div>
             `;
@@ -2637,10 +2640,14 @@
                         frameData[modelType] = {};
                     });
                     
-                    // Apply interpolated values for all active sliders (animate from -1 to +1)
+                    // Apply interpolated values for all active sliders
                     animatableWeights.forEach(({ modelType, weightId }) => {
-                        // Animate from -1 to +1 over the course of the animation
-                        const interpolatedValue = -1 + (2 * easedT); // -1 + (2 * easedT) gives range from -1 to +1
+                        // Get the min/max range for this weight
+                        const sliderInfo = activeSliders[modelType][weightId];
+                        const minVal = sliderInfo.min || -1.0;
+                        const maxVal = sliderInfo.max || 1.0;
+                        // Animate from min to max over the course of the animation
+                        const interpolatedValue = minVal + ((maxVal - minVal) * easedT);
                         frameData[modelType][parseInt(weightId)] = interpolatedValue;
                     });
                     

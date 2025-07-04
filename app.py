@@ -81,20 +81,24 @@ class CPPNManager:
             ("picbreeder", "apple"): {
                 "weight_ids": [42178, 4140, 34459, 17131],
                 "descriptions": ["Controls Stem Angle", "Controls Apple Size", "Cleans Background", "Removes Stem"],
+                "ranges": [[-3.0, 1.0], [-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]],  # Special range for stem angle
             },
             ("picbreeder", "skull"): {
                 "weight_ids": [4371, 5009, 5097, 37],
                 "descriptions": ["Controls Mouth Opening", "Controls Eye Winking", "Controls Eye Width", "Controls Jaw Width"],
+                "ranges": [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]],  # Default ranges
             },
             ("picbreeder", "butterfly"): {
                 "weight_ids": [1949, 3702, 17, 133],
                 "descriptions": ["Controls Wing Area", "Controls Color", "Converts Butterfly to Fly", "Controls Vertical Shape"],
+                "ranges": [[-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0], [-1.0, 1.0]],  # Default ranges
             }
         }
         
         return weight_data.get((source, genome), {
             "weight_ids": [],
             "descriptions": [],
+            "ranges": [],
         })
     
     def generate_image(self, model_key: str, weight_deltas: Dict[int, float], img_size: int = 256) -> np.ndarray:
